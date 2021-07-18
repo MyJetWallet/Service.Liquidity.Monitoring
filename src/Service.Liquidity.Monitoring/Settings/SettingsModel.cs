@@ -13,5 +13,8 @@ namespace Service.Liquidity.Monitoring.Settings
 
         [YamlProperty("LiquidityMonitoring.ElkLogs")]
         public LogElkSettings ElkLogs { get; set; }
+
+        [YamlProperty("LiquidityMonitoring.MyNoSqlWriterUrl")]
+        public string MyNoSqlWriterUrl { get; set; }
     }
 }

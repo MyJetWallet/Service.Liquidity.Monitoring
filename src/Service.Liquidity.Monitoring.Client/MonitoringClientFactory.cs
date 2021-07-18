@@ -12,5 +12,7 @@ namespace Service.Liquidity.Monitoring.Client
         }
 
         public IHelloService GetHelloService() => CreateGrpcService<IHelloService>();
+        
+        public IAssetPortfolioSettingsManager GetAssetPortfolioSettingsService() => CreateGrpcService<IAssetPortfolioSettingsManager>();
     }
 }
