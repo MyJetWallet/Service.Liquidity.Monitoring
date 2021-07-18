@@ -16,5 +16,8 @@ namespace Service.Liquidity.Monitoring.Settings
 
         [YamlProperty("LiquidityMonitoring.MyNoSqlWriterUrl")]
         public string MyNoSqlWriterUrl { get; set; }
+
+        [YamlProperty("LiquidityMonitoring.MyNoSqlReaderHostPort")]
+        public string MyNoSqlReaderHostPort { get; set; }
     }
 }
