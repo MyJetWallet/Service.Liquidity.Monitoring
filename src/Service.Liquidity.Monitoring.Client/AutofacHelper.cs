@@ -10,8 +10,6 @@ namespace Service.Liquidity.Monitoring.Client
         public static void MonitoringClient(this ContainerBuilder builder, string grpcServiceUrl)
         {
             var factory = new MonitoringClientFactory(grpcServiceUrl);
-
-            builder.RegisterInstance(factory.GetHelloService()).As<IHelloService>().SingleInstance();
         }
         
         public static void RegisterAssetPortfolioSettingsClient(this ContainerBuilder builder, string grpcServiceUrl)

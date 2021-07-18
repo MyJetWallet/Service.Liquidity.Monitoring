@@ -10,8 +10,6 @@ namespace Service.Liquidity.Monitoring.Client
         public MonitoringClientFactory(string grpcServiceUrl) : base(grpcServiceUrl)
         {
         }
-
-        public IHelloService GetHelloService() => CreateGrpcService<IHelloService>();
         
         public IAssetPortfolioSettingsManager GetAssetPortfolioSettingsService() => CreateGrpcService<IAssetPortfolioSettingsManager>();
     }

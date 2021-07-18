@@ -14,10 +14,19 @@ namespace Service.Liquidity.Monitoring.Modules
         {
             var noSqlClient = builder.CreateNoSqlClient(Program.ReloadedSettings(e => e.MyNoSqlReaderHostPort));
             builder.RegisterMyNoSqlWriter<AssetPortfolioSettingsNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl), AssetPortfolioSettingsNoSql.TableName);
+            builder.RegisterMyNoSqlWriter<AssetPortfolioStatusNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl), AssetPortfolioStatusNoSql.TableName);
             builder.RegisterMyNoSqlReader<AssetPortfolioBalanceNoSql>(noSqlClient, AssetPortfolioBalanceNoSql.TableName);
+            
+            //todo: рассказать Леше =))
             builder
                 .RegisterType<AssetPortfolioSettingsStorage>()
                 .As<IAssetPortfolioSettingsStorage>()
+                .As<IStartable>()
+                .AutoActivate()
+                .SingleInstance();
+            builder
+                .RegisterType<AssetPortfolioStatusStorage>()
+                .As<IAssetPortfolioStatusStorage>()
                 .As<IStartable>()
                 .AutoActivate()
                 .SingleInstance();
