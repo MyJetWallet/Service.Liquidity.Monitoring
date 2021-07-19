@@ -11,7 +11,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models
         
         public static AssetPortfolioStatusNoSql Create(AssetPortfolioStatus assetPortfolioStatus)
         {
-            return new()
+            return new AssetPortfolioStatusNoSql()
             {
                 PartitionKey = GeneratePartitionKey(assetPortfolioStatus.Asset),
                 RowKey = GenerateRowKey(),

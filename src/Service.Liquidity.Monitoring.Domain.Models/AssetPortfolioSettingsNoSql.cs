@@ -1,3 +1,4 @@
+
 using MyNoSqlServer.Abstractions;
 
 namespace Service.Liquidity.Monitoring.Domain.Models
@@ -12,7 +13,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models
         
         public static AssetPortfolioSettingsNoSql Create(AssetPortfolioSettings settings)
         {
-            return new()
+            return new AssetPortfolioSettingsNoSql()
             {
                 PartitionKey = GeneratePartitionKey(settings.Asset),
                 RowKey = GenerateRowKey(),
