@@ -36,7 +36,7 @@ namespace Service.Liquidity.Monitoring
             {
                 try
                 {
-                    client.Start();
+                    client.Stop();
                 }
                 catch(Exception ex)
                 {
