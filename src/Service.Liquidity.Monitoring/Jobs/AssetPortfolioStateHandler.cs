@@ -66,7 +66,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                 var assetSettingsByAsset = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(assetBalance.Asset);
                 if (assetSettingsByAsset == null)
                 {
-                    _logger.LogError($"Asset Settings for asset {assetBalance.Asset} not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
+                    _logger.LogInformation($"Asset Settings for asset {assetBalance.Asset} not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
                     return;
                 }
                 var lastStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(assetBalance.Asset);
