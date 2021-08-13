@@ -33,9 +33,6 @@ namespace Service.Liquidity.Monitoring.Jobs
         public void Start()
         {
             _myNoSqlServerDataReader.SubscribeToUpdateEvents(HandleUpdate, HandleDelete);
-
-            var x = _myNoSqlServerDataReader.Get();
-            var y = x;
         }
 
         private void HandleDelete(IReadOnlyList<AssetPortfolioBalanceNoSql> balances)
@@ -121,7 +118,9 @@ namespace Service.Liquidity.Monitoring.Jobs
                 Asset = AssetPortfolioSettingsNoSql.TotalSettingsAsset,
                 UpdateDate = DateTime.UtcNow,
                 UplStrike = uplStrike,
-                NetUsdStrike = netUsdStrike
+                NetUsdStrike = netUsdStrike,
+                Upl = totalUpl,
+                NetUsd = totalNetUsd
             };
             return actualStatus;
         }
@@ -140,7 +139,9 @@ namespace Service.Liquidity.Monitoring.Jobs
                 Asset = assetBalance.Asset,
                 UpdateDate = DateTime.UtcNow,
                 UplStrike = uplStrike,
-                NetUsdStrike = netUsdStrike
+                NetUsdStrike = netUsdStrike,
+                Upl = assetBalance.UnrealisedPnl,
+                NetUsd = assetBalance.NetUsdVolume
             };
             return actualStatus;
         }
