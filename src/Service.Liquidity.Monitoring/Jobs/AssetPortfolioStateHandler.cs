@@ -149,7 +149,7 @@ namespace Service.Liquidity.Monitoring.Jobs
         {
             if (value >= 0)
             {
-                if (!positiveArr.Any())
+                if (positiveArr == null || !positiveArr.Any())
                     return 0m;
                 if (value < positiveArr.Min())
                     return 0m;
@@ -173,7 +173,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             }
             else
             {
-                if (!negativeArr.Any())
+                if (negativeArr == null || !negativeArr.Any())
                     return 0m;
                 if (value > negativeArr.Max())
                     return 0m;
