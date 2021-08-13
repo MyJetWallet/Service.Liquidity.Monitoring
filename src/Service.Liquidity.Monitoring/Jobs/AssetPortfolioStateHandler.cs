@@ -127,7 +127,8 @@ namespace Service.Liquidity.Monitoring.Jobs
 
         private AssetPortfolioStatus GetActualStatusByAsset(NetBalanceByAsset assetBalance, AssetPortfolioSettings assetSettingsByAsset)
         {
-            if (assetBalance.Asset != assetSettingsByAsset.Asset)
+            if (assetBalance.Asset != assetSettingsByAsset.Asset && 
+                AssetPortfolioSettingsNoSql.DefaultSettingsAsset != assetSettingsByAsset.Asset)
                 throw new Exception("Bad asset settings");
 
             var uplStrike = GetUplStrike(assetBalance.UnrealisedPnl, assetSettingsByAsset);
@@ -153,7 +154,9 @@ namespace Service.Liquidity.Monitoring.Jobs
                         continue;
                     return positiveNetUsd;
                 }
-                return assetSettingsByAsset.PositiveNetUsd.Max();
+                return assetSettingsByAsset.PositiveNetUsd.Any() 
+                    ? assetSettingsByAsset.PositiveNetUsd.Max() 
+                    : 0m;
             }
             foreach (var negativeNetUsd in assetSettingsByAsset.NegativeNetUsd.OrderByDescending(e => e))
             {
@@ -161,7 +164,9 @@ namespace Service.Liquidity.Monitoring.Jobs
                     continue;
                 return negativeNetUsd;
             }
-            return assetSettingsByAsset.NegativeNetUsd.Min();
+            return assetSettingsByAsset.NegativeNetUsd.Any() 
+                ? assetSettingsByAsset.NegativeNetUsd.Min() 
+                : 0m;
         }
 
         private decimal GetUplStrike(decimal assetBalanceUnrealisedPnl, AssetPortfolioSettings assetSettingsByAsset)
@@ -174,7 +179,9 @@ namespace Service.Liquidity.Monitoring.Jobs
                         continue;
                     return positiveUpl;
                 }
-                return assetSettingsByAsset.PositiveUpl.Max();
+                return assetSettingsByAsset.PositiveUpl.Any() 
+                    ? assetSettingsByAsset.PositiveUpl.Max() 
+                    : 0m;
             }
             foreach (var negativeUpl in assetSettingsByAsset.NegativeUpl.OrderByDescending(e => e))
             {
@@ -182,7 +189,9 @@ namespace Service.Liquidity.Monitoring.Jobs
                     continue;
                 return negativeUpl;
             }
-            return assetSettingsByAsset.NegativeUpl.Min();
+            return assetSettingsByAsset.NegativeUpl.Any() 
+                ? assetSettingsByAsset.NegativeUpl.Min() 
+                : 0m;
         }
     }
 }
