@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Logging;
 using MyNoSqlServer.Abstractions;
+using Newtonsoft.Json;
 using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Portfolio.Domain.Models;
@@ -112,8 +113,8 @@ namespace Service.Liquidity.Monitoring.Jobs
             var totalUpl = assetBalances.Sum(e => e.UnrealisedPnl);
             var totalNetUsd = assetBalances.Sum(e => e.NetUsdVolume);
 
-            var uplStrike = GetUplStrike(totalUpl, assetSettingsByAsset);
-            var netUsdStrike = GetNetUsdStrike(totalNetUsd, assetSettingsByAsset);
+            var uplStrike = GetStrike(totalUpl, assetSettingsByAsset.PositiveUpl, assetSettingsByAsset.NegativeUpl);
+            var netUsdStrike = GetStrike(totalNetUsd, assetSettingsByAsset.PositiveNetUsd, assetSettingsByAsset.NegativeNetUsd);
             
             var actualStatus = new AssetPortfolioStatus()
             {
@@ -131,8 +132,8 @@ namespace Service.Liquidity.Monitoring.Jobs
                 AssetPortfolioSettingsNoSql.DefaultSettingsAsset != assetSettingsByAsset.Asset)
                 throw new Exception("Bad asset settings");
 
-            var uplStrike = GetUplStrike(assetBalance.UnrealisedPnl, assetSettingsByAsset);
-            var netUsdStrike = GetNetUsdStrike(assetBalance.NetUsdVolume, assetSettingsByAsset);
+            var uplStrike = GetStrike(assetBalance.UnrealisedPnl, assetSettingsByAsset.PositiveUpl, assetSettingsByAsset.NegativeUpl);
+            var netUsdStrike = GetStrike(assetBalance.NetUsdVolume, assetSettingsByAsset.PositiveNetUsd, assetSettingsByAsset.NegativeNetUsd);
             
             var actualStatus = new AssetPortfolioStatus()
             {
@@ -144,54 +145,56 @@ namespace Service.Liquidity.Monitoring.Jobs
             return actualStatus;
         }
 
-        private decimal GetNetUsdStrike(decimal assetBalanceNetUsdVolume, AssetPortfolioSettings assetSettingsByAsset)
+        public static decimal GetStrike(decimal value, List<decimal> positiveArr, List<decimal> negativeArr)
         {
-            if (assetBalanceNetUsdVolume >= 0)
+            if (value >= 0)
             {
-                foreach (var positiveNetUsd in assetSettingsByAsset.PositiveNetUsd.OrderBy(e => e))
+                if (!positiveArr.Any())
+                    return 0m;
+                if (value < positiveArr.Min())
+                    return 0m;
+                if (value >= positiveArr.Max())
+                    return positiveArr.Max();
+                
+                var strike = 0m;
+                foreach (var positiveValue in positiveArr.OrderBy(e => e))
                 {
-                    if (assetBalanceNetUsdVolume > positiveNetUsd)
+                    if (value >= positiveValue)
+                    {
+                        strike = positiveValue;
                         continue;
-                    return positiveNetUsd;
+                    }
+                    return strike;
                 }
-                return assetSettingsByAsset.PositiveNetUsd.Any() 
-                    ? assetSettingsByAsset.PositiveNetUsd.Max() 
-                    : 0m;
+                throw new Exception(
+                    $"Something wrong in GetNetUsdStrike with value={value}" +
+                    $" and positiveArr={JsonConvert.SerializeObject(positiveArr)}" +
+                    $" and negativeArr={JsonConvert.SerializeObject(negativeArr)}");
             }
-            foreach (var negativeNetUsd in assetSettingsByAsset.NegativeNetUsd.OrderByDescending(e => e))
+            else
             {
-                if (assetBalanceNetUsdVolume < negativeNetUsd)
-                    continue;
-                return negativeNetUsd;
-            }
-            return assetSettingsByAsset.NegativeNetUsd.Any() 
-                ? assetSettingsByAsset.NegativeNetUsd.Min() 
-                : 0m;
-        }
+                if (!negativeArr.Any())
+                    return 0m;
+                if (value > negativeArr.Max())
+                    return 0m;
+                if (value <= negativeArr.Min())
+                    return negativeArr.Min();
 
-        private decimal GetUplStrike(decimal assetBalanceUnrealisedPnl, AssetPortfolioSettings assetSettingsByAsset)
-        {
-            if (assetBalanceUnrealisedPnl >= 0)
-            {
-                foreach (var positiveUpl in assetSettingsByAsset.PositiveUpl.OrderBy(e => e))
+                var strike = 0m;
+                foreach (var negativeValue in negativeArr.OrderByDescending(e => e))
                 {
-                    if (assetBalanceUnrealisedPnl > positiveUpl)
+                    if (value <= negativeValue)
+                    {
+                        strike = negativeValue;
                         continue;
-                    return positiveUpl;
+                    }
+                    return strike;
                 }
-                return assetSettingsByAsset.PositiveUpl.Any() 
-                    ? assetSettingsByAsset.PositiveUpl.Max() 
-                    : 0m;
+                throw new Exception(
+                    $"Something wrong in GetNetUsdStrike with value={value}" +
+                    $" and positiveArr={JsonConvert.SerializeObject(positiveArr)}" +
+                    $" and negativeArr={JsonConvert.SerializeObject(negativeArr)}");
             }
-            foreach (var negativeUpl in assetSettingsByAsset.NegativeUpl.OrderByDescending(e => e))
-            {
-                if (assetBalanceUnrealisedPnl < negativeUpl)
-                    continue;
-                return negativeUpl;
-            }
-            return assetSettingsByAsset.NegativeUpl.Any() 
-                ? assetSettingsByAsset.NegativeUpl.Min() 
-                : 0m;
         }
     }
 }
