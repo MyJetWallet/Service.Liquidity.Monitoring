@@ -6,6 +6,8 @@ namespace Service.Liquidity.Monitoring.Domain.Models
     public class AssetPortfolioSettingsNoSql : MyNoSqlDbEntity
     {
         public const string TableName = "myjetwallet-liquitityportfolio-settings";
+        public const string DefaultSettingsAsset = "_DEFAULT_";
+        public const string TotalSettingsAsset = "_TOTAL_";
         private static string GeneratePartitionKey(string asset) => $"asset:{asset}";
         private static string GenerateRowKey() => "settings";
         

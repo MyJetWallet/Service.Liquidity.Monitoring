@@ -56,6 +56,39 @@ namespace Service.Liquidity.Monitoring.Services
             }
 
             _settings = settingsMap;
+
+            await CheckDefaultValues();
+        }
+
+        private async Task CheckDefaultValues()
+        {
+            var settings = GetAssetPortfolioSettings();
+
+            if (!settings.Select(e => e.Asset).Contains(AssetPortfolioSettingsNoSql.DefaultSettingsAsset))
+            {
+                var defaultSettings = new AssetPortfolioSettings()
+                {
+                    Asset = AssetPortfolioSettingsNoSql.DefaultSettingsAsset,
+                    PositiveUpl = new List<decimal>(),
+                    NegativeUpl = new List<decimal>(),
+                    PositiveNetUsd = new List<decimal>(),
+                    NegativeNetUsd = new List<decimal>()
+                };
+                await UpdateAssetPortfolioSettingsAsync(defaultSettings);
+            }
+            
+            if (!settings.Select(e => e.Asset).Contains(AssetPortfolioSettingsNoSql.TotalSettingsAsset))
+            {
+                var totalSettings = new AssetPortfolioSettings()
+                {
+                    Asset = AssetPortfolioSettingsNoSql.TotalSettingsAsset,
+                    PositiveUpl = new List<decimal>(),
+                    NegativeUpl = new List<decimal>(),
+                    PositiveNetUsd = new List<decimal>(),
+                    NegativeNetUsd = new List<decimal>()
+                };
+                await UpdateAssetPortfolioSettingsAsync(totalSettings);
+            }
         }
 
         public void Start()

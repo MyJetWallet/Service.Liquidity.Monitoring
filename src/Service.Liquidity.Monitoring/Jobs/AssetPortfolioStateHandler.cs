@@ -33,7 +33,6 @@ namespace Service.Liquidity.Monitoring.Jobs
         {
             _myNoSqlServerDataReader.SubscribeToUpdateEvents(HandleUpdate, HandleDelete);
 
-
             var x = _myNoSqlServerDataReader.Get();
             var y = x;
         }
@@ -47,60 +46,143 @@ namespace Service.Liquidity.Monitoring.Jobs
         {
             _logger.LogInformation("Handle Update message from AssetPortfolioBalanceNoSql");
 
-            RefreshAssetStatuses(balances).GetAwaiter().GetResult();
+            RefreshStatuses(balances).GetAwaiter().GetResult();
         }
 
-        private async Task RefreshAssetStatuses(IReadOnlyList<AssetPortfolioBalanceNoSql> assetPortfolioBalance)
+        private async Task RefreshStatuses(IReadOnlyList<AssetPortfolioBalanceNoSql> assetPortfolioBalance)
         {
             var balance = assetPortfolioBalance.FirstOrDefault()?.Balance;
             var assetBalances = balance?.BalanceByAsset;
-
+            
             if (assetBalances == null || !assetBalances.Any())
             {
                 _logger.LogError($"{AssetPortfolioBalanceNoSql.TableName} is empty!!!");
                 return;
             }
+
+            var someoneChanged = false;
             
             assetBalances.ForEach(async assetBalance =>
             {
                 var assetSettingsByAsset = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(assetBalance.Asset);
                 if (assetSettingsByAsset == null)
                 {
-                    _logger.LogInformation($"Asset Settings for asset {assetBalance.Asset} not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
+                    assetSettingsByAsset = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(AssetPortfolioSettingsNoSql.DefaultSettingsAsset);
+                }
+                if (assetSettingsByAsset == null)
+                {
+                    _logger.LogError($"Default settings not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
                     return;
                 }
                 var lastStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(assetBalance.Asset);
-                var actualStatus = GetActualStatus(assetBalance, assetSettingsByAsset);
+                var actualStatus = GetActualStatusByAsset(assetBalance, assetSettingsByAsset);
 
-                if (lastStatus == null || lastStatus.Status != actualStatus)
+                if (lastStatus == null || 
+                    lastStatus.UplStrike != actualStatus.UplStrike ||
+                    lastStatus.NetUsdStrike != actualStatus.NetUsdStrike)
                 {
-                    await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(new AssetPortfolioStatus()
-                    {
-                        Asset = assetBalance.Asset,
-                        Status = actualStatus
-                    });
+                    someoneChanged = true;
+                    await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualStatus);
                 }
             });
+
+            if (someoneChanged)
+            {
+                var assetSettingsByTotal = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
+                if (assetSettingsByTotal == null)
+                {
+                    _logger.LogError($"Total settings not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
+                }
+
+                var lastStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
+                var actualStatus = GetActualStatusByTotal(assetBalances, assetSettingsByTotal);
+
+                if (lastStatus == null || 
+                    lastStatus.UplStrike != actualStatus.UplStrike ||
+                    lastStatus.NetUsdStrike != actualStatus.NetUsdStrike)
+                {
+                    someoneChanged = true;
+                    await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualStatus);
+                }
+            }
+        }
+        
+        private AssetPortfolioStatus GetActualStatusByTotal(List<NetBalanceByAsset> assetBalances, AssetPortfolioSettings assetSettingsByAsset)
+        {
+            var totalUpl = assetBalances.Sum(e => e.UnrealisedPnl);
+            var totalNetUsd = assetBalances.Sum(e => e.NetUsdVolume);
+
+            var uplStrike = GetUplStrike(totalUpl, assetSettingsByAsset);
+            var netUsdStrike = GetNetUsdStrike(totalNetUsd, assetSettingsByAsset);
+            
+            var actualStatus = new AssetPortfolioStatus()
+            {
+                Asset = AssetPortfolioSettingsNoSql.TotalSettingsAsset,
+                UpdateDate = DateTime.UtcNow,
+                UplStrike = uplStrike,
+                NetUsdStrike = netUsdStrike
+            };
+            return actualStatus;
         }
 
-        private AssetStatus GetActualStatus(NetBalanceByAsset assetBalance, AssetPortfolioSettings assetSettingsByAsset)
+        private AssetPortfolioStatus GetActualStatusByAsset(NetBalanceByAsset assetBalance, AssetPortfolioSettings assetSettingsByAsset)
         {
             if (assetBalance.Asset != assetSettingsByAsset.Asset)
                 throw new Exception("Bad asset settings");
+
+            var uplStrike = GetUplStrike(assetBalance.UnrealisedPnl, assetSettingsByAsset);
+            var netUsdStrike = GetNetUsdStrike(assetBalance.NetUsdVolume, assetSettingsByAsset);
             
-            if (assetBalance.NetVolume < assetSettingsByAsset.NetWarningLevel)
+            var actualStatus = new AssetPortfolioStatus()
             {
-                return AssetStatus.Normal;
-            }
-            if (assetBalance.NetVolume < assetSettingsByAsset.NetDangerLevel)
+                Asset = assetBalance.Asset,
+                UpdateDate = DateTime.UtcNow,
+                UplStrike = uplStrike,
+                NetUsdStrike = netUsdStrike
+            };
+            return actualStatus;
+        }
+
+        private decimal GetNetUsdStrike(decimal assetBalanceNetUsdVolume, AssetPortfolioSettings assetSettingsByAsset)
+        {
+            if (assetBalanceNetUsdVolume >= 0)
             {
-                return AssetStatus.Warning;
+                foreach (var positiveNetUsd in assetSettingsByAsset.PositiveNetUsd.OrderBy(e => e))
+                {
+                    if (assetBalanceNetUsdVolume > positiveNetUsd)
+                        continue;
+                    return positiveNetUsd;
+                }
+                return assetSettingsByAsset.PositiveNetUsd.Max();
             }
-            if (assetBalance.NetVolume < assetSettingsByAsset.NetCriticalLevel)
+            foreach (var negativeNetUsd in assetSettingsByAsset.NegativeNetUsd.OrderByDescending(e => e))
             {
-                return AssetStatus.Danger;
+                if (assetBalanceNetUsdVolume < negativeNetUsd)
+                    continue;
+                return negativeNetUsd;
             }
-            return AssetStatus.Critical;
+            return assetSettingsByAsset.NegativeNetUsd.Min();
+        }
+
+        private decimal GetUplStrike(decimal assetBalanceUnrealisedPnl, AssetPortfolioSettings assetSettingsByAsset)
+        {
+            if (assetBalanceUnrealisedPnl >= 0)
+            {
+                foreach (var positiveUpl in assetSettingsByAsset.PositiveUpl.OrderBy(e => e))
+                {
+                    if (assetBalanceUnrealisedPnl > positiveUpl)
+                        continue;
+                    return positiveUpl;
+                }
+                return assetSettingsByAsset.PositiveUpl.Max();
+            }
+            foreach (var negativeUpl in assetSettingsByAsset.NegativeUpl.OrderByDescending(e => e))
+            {
+                if (assetBalanceUnrealisedPnl < negativeUpl)
+                    continue;
+                return negativeUpl;
+            }
+            return assetSettingsByAsset.NegativeUpl.Min();
         }
     }
 }
