@@ -105,10 +105,10 @@ namespace Service.Liquidity.Monitoring.Jobs
             }
         }
         
-        private AssetPortfolioStatus GetActualStatusByTotal(List<NetBalanceByAsset> assetBalances, AssetPortfolioSettings assetSettingsByAsset)
+        private AssetPortfolioStatus GetActualStatusByTotal(List<BalanceByAsset> assetBalances, AssetPortfolioSettings assetSettingsByAsset)
         {
             var totalUpl = assetBalances.Sum(e => e.UnrealisedPnl);
-            var totalNetUsd = assetBalances.Sum(e => e.NetUsdVolume);
+            var totalNetUsd = assetBalances.Sum(e => e.UsdVolume);
 
             var uplStrike = GetStrike(totalUpl, assetSettingsByAsset.PositiveUpl, assetSettingsByAsset.NegativeUpl);
             var netUsdStrike = GetStrike(totalNetUsd, assetSettingsByAsset.PositiveNetUsd, assetSettingsByAsset.NegativeNetUsd);
@@ -125,14 +125,14 @@ namespace Service.Liquidity.Monitoring.Jobs
             return actualStatus;
         }
 
-        private AssetPortfolioStatus GetActualStatusByAsset(NetBalanceByAsset assetBalance, AssetPortfolioSettings assetSettingsByAsset)
+        private AssetPortfolioStatus GetActualStatusByAsset(BalanceByAsset assetBalance, AssetPortfolioSettings assetSettingsByAsset)
         {
             if (assetBalance.Asset != assetSettingsByAsset.Asset && 
                 AssetPortfolioSettingsNoSql.DefaultSettingsAsset != assetSettingsByAsset.Asset)
                 throw new Exception("Bad asset settings");
 
             var uplStrike = GetStrike(assetBalance.UnrealisedPnl, assetSettingsByAsset.PositiveUpl, assetSettingsByAsset.NegativeUpl);
-            var netUsdStrike = GetStrike(assetBalance.NetUsdVolume, assetSettingsByAsset.PositiveNetUsd, assetSettingsByAsset.NegativeNetUsd);
+            var netUsdStrike = GetStrike(assetBalance.UsdVolume, assetSettingsByAsset.PositiveNetUsd, assetSettingsByAsset.NegativeNetUsd);
             
             var actualStatus = new AssetPortfolioStatus()
             {
@@ -141,7 +141,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                 UplStrike = uplStrike,
                 NetUsdStrike = netUsdStrike,
                 Upl = assetBalance.UnrealisedPnl,
-                NetUsd = assetBalance.NetUsdVolume
+                NetUsd = assetBalance.UsdVolume
             };
             return actualStatus;
         }
