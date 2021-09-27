@@ -57,8 +57,6 @@ namespace Service.Liquidity.Monitoring.Jobs
                 _logger.LogError($"{AssetPortfolioBalanceNoSql.TableName} is empty!!!");
                 return;
             }
-
-            var someoneChanged = false;
             
             assetBalances.ForEach(async assetBalance =>
             {
@@ -79,29 +77,24 @@ namespace Service.Liquidity.Monitoring.Jobs
                     lastStatus.UplStrike != actualStatus.UplStrike ||
                     lastStatus.NetUsdStrike != actualStatus.NetUsdStrike)
                 {
-                    someoneChanged = true;
                     await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualStatus);
                 }
             });
-
-            if (someoneChanged)
+            
+            var assetSettingsByTotal = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
+            if (assetSettingsByTotal == null)
             {
-                var assetSettingsByTotal = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
-                if (assetSettingsByTotal == null)
-                {
-                    _logger.LogError($"Total settings not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
-                }
+                _logger.LogError($"Total settings not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
+            }
 
-                var lastStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
-                var actualStatus = GetActualStatusByTotal(assetBalances, assetSettingsByTotal);
+            var lastStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
+            var actualStatus = GetActualStatusByTotal(assetBalances, assetSettingsByTotal);
 
-                if (lastStatus == null || 
-                    lastStatus.UplStrike != actualStatus.UplStrike ||
-                    lastStatus.NetUsdStrike != actualStatus.NetUsdStrike)
-                {
-                    someoneChanged = true;
-                    await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualStatus);
-                }
+            if (lastStatus == null || 
+                lastStatus.UplStrike != actualStatus.UplStrike ||
+                lastStatus.NetUsdStrike != actualStatus.NetUsdStrike)
+            {
+                await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualStatus);
             }
         }
         
