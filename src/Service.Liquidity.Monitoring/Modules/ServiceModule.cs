@@ -4,7 +4,7 @@ using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Jobs;
 using Service.Liquidity.Monitoring.Services;
-using Service.Liquidity.Portfolio.Domain.Models;
+using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
 
 namespace Service.Liquidity.Monitoring.Modules
 {
@@ -14,8 +14,8 @@ namespace Service.Liquidity.Monitoring.Modules
         {
             var noSqlClient = builder.CreateNoSqlClient(Program.ReloadedSettings(e => e.MyNoSqlReaderHostPort));
             builder.RegisterMyNoSqlWriter<AssetPortfolioSettingsNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl), AssetPortfolioSettingsNoSql.TableName);
-            builder.RegisterMyNoSqlWriter<AssetPortfolioStatusNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl), AssetPortfolioStatusNoSql.TableName);
-            builder.RegisterMyNoSqlReader<AssetPortfolioBalanceNoSql>(noSqlClient, AssetPortfolioBalanceNoSql.TableName);
+            builder.RegisterMyNoSqlWriter<AssetPortfolioVelocityStatusNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl), AssetPortfolioVelocityStatusNoSql.TableName);
+            builder.RegisterMyNoSqlReader<PortfolioNoSql>(noSqlClient, PortfolioNoSql.TableName);
             
             //todo: рассказать Леше =))
             builder

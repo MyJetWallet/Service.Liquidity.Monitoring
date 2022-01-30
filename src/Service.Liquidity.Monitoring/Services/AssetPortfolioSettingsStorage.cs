@@ -40,7 +40,7 @@ namespace Service.Liquidity.Monitoring.Services
 
             await ReloadSettings();
 
-            _logger.LogInformation("Updated LiquidityConverterSettings Settings: {jsonText}",
+            _logger.LogInformation("Updated LiquidityMonitoringSettings Settings: {jsonText}",
                 JsonConvert.SerializeObject(settings));
         }
 
@@ -66,26 +66,24 @@ namespace Service.Liquidity.Monitoring.Services
 
             if (!settings.Select(e => e.Asset).Contains(AssetPortfolioSettingsNoSql.DefaultSettingsAsset))
             {
-                var defaultSettings = new AssetPortfolioSettings()
+                var defaultSettings = new AssetPortfolioSettings
                 {
                     Asset = AssetPortfolioSettingsNoSql.DefaultSettingsAsset,
-                    PositiveUpl = new List<decimal>(),
-                    NegativeUpl = new List<decimal>(),
-                    PositiveNetUsd = new List<decimal>(),
-                    NegativeNetUsd = new List<decimal>()
+                    VelocityMin = -5,
+                    VelocityMax = 5,
+                    VelocityRiskUsdMin = -5000,
                 };
                 await UpdateAssetPortfolioSettingsAsync(defaultSettings);
             }
             
             if (!settings.Select(e => e.Asset).Contains(AssetPortfolioSettingsNoSql.TotalSettingsAsset))
             {
-                var totalSettings = new AssetPortfolioSettings()
+                var totalSettings = new AssetPortfolioSettings
                 {
                     Asset = AssetPortfolioSettingsNoSql.TotalSettingsAsset,
-                    PositiveUpl = new List<decimal>(),
-                    NegativeUpl = new List<decimal>(),
-                    PositiveNetUsd = new List<decimal>(),
-                    NegativeNetUsd = new List<decimal>()
+                    VelocityMin = 0,
+                    VelocityMax = 0,
+                    VelocityRiskUsdMin = -20000,
                 };
                 await UpdateAssetPortfolioSettingsAsync(totalSettings);
             }

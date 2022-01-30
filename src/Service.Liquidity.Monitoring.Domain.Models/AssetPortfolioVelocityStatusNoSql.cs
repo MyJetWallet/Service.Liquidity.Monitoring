@@ -2,16 +2,16 @@ using MyNoSqlServer.Abstractions;
 
 namespace Service.Liquidity.Monitoring.Domain.Models
 {
-    public class AssetPortfolioStatusNoSql : MyNoSqlDbEntity
+    public class AssetPortfolioVelocityStatusNoSql : MyNoSqlDbEntity
     {
-        public const string TableName = "jetwallet-liquidity-monitoring-assetStatus";
+        public const string TableName = "myjetwallet-liquidity-tradingportfolio-velocity";
         private static string GeneratePartitionKey(string asset) => $"asset:{asset}";
-        private static string GenerateRowKey() => "status";
+        private static string GenerateRowKey() => "velocity";
         public AssetPortfolioStatus AssetStatus { get; set; }
         
-        public static AssetPortfolioStatusNoSql Create(AssetPortfolioStatus assetPortfolioStatus)
+        public static AssetPortfolioVelocityStatusNoSql Create(AssetPortfolioStatus assetPortfolioStatus)
         {
-            return new AssetPortfolioStatusNoSql()
+            return new AssetPortfolioVelocityStatusNoSql()
             {
                 PartitionKey = GeneratePartitionKey(assetPortfolioStatus.Asset),
                 RowKey = GenerateRowKey(),

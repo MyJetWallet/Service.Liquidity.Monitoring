@@ -1,101 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.Jobs;
 
 namespace Service.Liquidity.Monitoring.Tests
 {
     public class Bowling
     {
-        private readonly AssetPortfolioSettings _settings = new AssetPortfolioSettings()
-        {
-            PositiveUpl = new List<decimal>()
-            {
-                {100m},
-                {200m},
-                {300m}
-            }, 
-            NegativeUpl = new List<decimal>()
-            {
-                {-100m},
-                {-200m},
-                {-300m}
-            },
-            PositiveNetUsd = new List<decimal>()
-            {
-                {100m},
-                {200m},
-                {300m}
-            }, 
-            NegativeNetUsd = new List<decimal>()
-            {
-                {-100m},
-                {-200m},
-                {-300m}
-            }
-        };
-        [Test]
-        public void Test1()
-        {
-            var strike = AssetPortfolioStateHandler.GetStrike(10, _settings.PositiveNetUsd, _settings.NegativeNetUsd);
-            
-            Assert.AreEqual(0, strike);
-        }
         
-        [Test]
-        public void Test2()
+        [TestCase(-10, -5, 5, true)]
+        [TestCase(-5, -5, 5, true)]
+        [TestCase(-3, -5, 5, false)]
+        [TestCase(3, -5, 5, false)]
+        [TestCase(5, -5, 5, true)]
+        [TestCase(10, -5, 5, true)]
+        public void TestThresholdVelocity(decimal currValue, decimal min, decimal max, bool result)
         {
-            var strike = AssetPortfolioStateHandler.GetStrike(150, _settings.PositiveNetUsd, _settings.NegativeNetUsd);
-            
-            Assert.AreEqual(100, strike);
+            var strike = AssetPortfolioStateHandler.ThresholdVelocity(currValue, min, max);
+            Assert.AreEqual(result, strike.IsAlarm);
         }
-        
-        [Test]
-        public void Test2_1()
+
+        [TestCase(-10000, -5000, true)]
+        [TestCase(-5000, -5000, true)]
+        [TestCase(0, -5000,  false)]
+        [TestCase(5000, -5000,  false)]
+        public void ThresholdTotalVelocityRisk(decimal currValue, decimal min, bool result)
         {
-            var strike = AssetPortfolioStateHandler.GetStrike(200, _settings.PositiveNetUsd, _settings.NegativeNetUsd);
-            
-            Assert.AreEqual(200, strike);
-        }
-        
-        [Test]
-        public void Test3()
-        {
-            var strike = AssetPortfolioStateHandler.GetStrike(350, _settings.PositiveNetUsd, _settings.NegativeNetUsd);
-            
-            Assert.AreEqual(300, strike);
-        }
-        
-        [Test]
-        public void Test4()
-        {
-            var strike = AssetPortfolioStateHandler.GetStrike(-10, _settings.PositiveNetUsd, _settings.NegativeNetUsd);
-            
-            Assert.AreEqual(0, strike);
-        }
-        
-        [Test]
-        public void Test5()
-        {
-            var strike = AssetPortfolioStateHandler.GetStrike(-250, _settings.PositiveNetUsd, _settings.NegativeNetUsd);
-            
-            Assert.AreEqual(-200, strike);
-        }
-        [Test]
-        public void Test5_1()
-        {
-            var strike = AssetPortfolioStateHandler.GetStrike(-200, _settings.PositiveNetUsd, _settings.NegativeNetUsd);
-            
-            Assert.AreEqual(-200, strike);
-        }
-        
-        [Test]
-        public void Test6()
-        {
-            var strike = AssetPortfolioStateHandler.GetStrike(-350, _settings.PositiveNetUsd, _settings.NegativeNetUsd);
-            
-            Assert.AreEqual(-300, strike);
+            var strike = AssetPortfolioStateHandler.ThresholdVelocityRisk(currValue, min);
+            Assert.AreEqual(result, strike.IsAlarm);
         }
     }
 }

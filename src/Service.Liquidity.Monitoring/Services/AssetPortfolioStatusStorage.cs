@@ -13,11 +13,11 @@ namespace Service.Liquidity.Monitoring.Services
     public class AssetPortfolioStatusStorage : IAssetPortfolioStatusStorage, IStartable
     {
         private readonly ILogger<AssetPortfolioStatusStorage> _logger;
-        private readonly IMyNoSqlServerDataWriter<AssetPortfolioStatusNoSql> _statusesDataWriter;
+        private readonly IMyNoSqlServerDataWriter<AssetPortfolioVelocityStatusNoSql> _statusesDataWriter;
         private Dictionary<string, AssetPortfolioStatus> _statusMap = new Dictionary<string, AssetPortfolioStatus>();
 
         public AssetPortfolioStatusStorage(ILogger<AssetPortfolioStatusStorage> logger,
-            IMyNoSqlServerDataWriter<AssetPortfolioStatusNoSql> statusesDataWriter)
+            IMyNoSqlServerDataWriter<AssetPortfolioVelocityStatusNoSql> statusesDataWriter)
         {
             _logger = logger;
             _statusesDataWriter = statusesDataWriter;
@@ -35,7 +35,7 @@ namespace Service.Liquidity.Monitoring.Services
 
         public async Task UpdateAssetPortfolioStatusAsync(AssetPortfolioStatus assetPortfolioStatus)
         {
-            await _statusesDataWriter.InsertOrReplaceAsync(AssetPortfolioStatusNoSql.Create(assetPortfolioStatus));
+            await _statusesDataWriter.InsertOrReplaceAsync(AssetPortfolioVelocityStatusNoSql.Create(assetPortfolioStatus));
 
             await ReloadSettings();
 

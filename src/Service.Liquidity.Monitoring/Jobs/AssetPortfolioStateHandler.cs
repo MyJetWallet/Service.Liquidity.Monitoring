@@ -8,18 +8,20 @@ using MyNoSqlServer.Abstractions;
 using Newtonsoft.Json;
 using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Services;
-using Service.Liquidity.Portfolio.Domain.Models;
+using Service.Liquidity.TradingPortfolio.Client;
+using Service.Liquidity.TradingPortfolio.Domain.Models;
+using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
 
 namespace Service.Liquidity.Monitoring.Jobs
 {
     public class AssetPortfolioStateHandler : IStartable
     {
         private readonly ILogger<AssetPortfolioStateHandler> _logger;
-        private readonly IMyNoSqlServerDataReader<AssetPortfolioBalanceNoSql> _myNoSqlServerDataReader;
+        private readonly IMyNoSqlServerDataReader<PortfolioNoSql> _myNoSqlServerDataReader;
         private readonly IAssetPortfolioSettingsStorage _assetPortfolioSettingsStorage;
         private readonly IAssetPortfolioStatusStorage _assetPortfolioStatusStorage;
 
-        public AssetPortfolioStateHandler(IMyNoSqlServerDataReader<AssetPortfolioBalanceNoSql> myNoSqlServerDataReader,
+        public AssetPortfolioStateHandler(IMyNoSqlServerDataReader<PortfolioNoSql> myNoSqlServerDataReader,
             ILogger<AssetPortfolioStateHandler> logger,
             IAssetPortfolioSettingsStorage assetPortfolioSettingsStorage,
             IAssetPortfolioStatusStorage assetPortfolioStatusStorage)
@@ -35,32 +37,33 @@ namespace Service.Liquidity.Monitoring.Jobs
             _myNoSqlServerDataReader.SubscribeToUpdateEvents(HandleUpdate, HandleDelete);
         }
 
-        private void HandleDelete(IReadOnlyList<AssetPortfolioBalanceNoSql> balances)
+        private void HandleDelete(IReadOnlyList<PortfolioNoSql> balances)
         {
-            _logger.LogInformation("Handle Delete message from AssetPortfolioBalanceNoSql");
+            _logger.LogInformation("Handle Delete message from PortfolioNoSql<");
         }
 
-        private void HandleUpdate(IReadOnlyList<AssetPortfolioBalanceNoSql> balances)
+        private void HandleUpdate(IReadOnlyList<PortfolioNoSql> balances)
         {
-            _logger.LogInformation("Handle Update message from AssetPortfolioBalanceNoSql");
+            _logger.LogInformation("Handle Update message from PortfolioNoSql");
 
             RefreshStatuses(balances).GetAwaiter().GetResult();
         }
 
-        private async Task RefreshStatuses(IReadOnlyList<AssetPortfolioBalanceNoSql> assetPortfolioBalance)
+        private async Task RefreshStatuses(IReadOnlyList<PortfolioNoSql> assetPortfolioBalance)
         {
-            var balance = assetPortfolioBalance.FirstOrDefault()?.Balance;
-            var assetBalances = balance?.BalanceByAsset;
+            var portfolio = assetPortfolioBalance.FirstOrDefault()?.Portfolio;
+            var assets = portfolio?.Assets;
             
-            if (assetBalances == null || !assetBalances.Any())
+            if (assets == null || !assets.Any())
             {
-                _logger.LogError($"{AssetPortfolioBalanceNoSql.TableName} is empty!!!");
+                _logger.LogError($"{PortfolioNoSql.TableName} is empty!!!");
                 return;
             }
-            
-            assetBalances.ForEach(async assetBalance =>
+            // Check asset velocity and velocityRisk
+            foreach (var asset in assets.Values)
             {
-                var assetSettingsByAsset = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(assetBalance.Asset);
+                
+                var assetSettingsByAsset = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(asset.Symbol);
                 if (assetSettingsByAsset == null)
                 {
                     assetSettingsByAsset = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(AssetPortfolioSettingsNoSql.DefaultSettingsAsset);
@@ -70,125 +73,145 @@ namespace Service.Liquidity.Monitoring.Jobs
                     _logger.LogError($"Default settings not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
                     return;
                 }
-                var lastStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(assetBalance.Asset);
-                var actualStatus = GetActualStatusByAsset(assetBalance, assetSettingsByAsset);
+                
+                var lastAssetStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(asset.Symbol);
+                var actualAssetStatus = GetActualStatusByAsset(asset, assetSettingsByAsset);
 
-                if (lastStatus == null || 
-                    lastStatus.UplStrike != actualStatus.UplStrike ||
-                    lastStatus.NetUsdStrike != actualStatus.NetUsdStrike)
+                if (lastAssetStatus == null || 
+                    (lastAssetStatus.Velocity.IsAlarm != actualAssetStatus.Velocity.IsAlarm) ||
+                    (lastAssetStatus.VelocityRisk.IsAlarm != actualAssetStatus.VelocityRisk.IsAlarm))
                 {
-                    await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualStatus);
+                    await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
                 }
-            });
-            
+            }
+            // Check Total
             var assetSettingsByTotal = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
             if (assetSettingsByTotal == null)
             {
                 _logger.LogError($"Total settings not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
             }
 
-            var lastStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
-            var actualStatus = GetActualStatusByTotal(assetBalances, assetSettingsByTotal);
+            var lastTotalStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
+            var actualTotalStatus = GetActualStatusByTotal(assets.Values.ToList(), assetSettingsByTotal);
 
-            if (lastStatus == null || 
-                lastStatus.UplStrike != actualStatus.UplStrike ||
-                lastStatus.NetUsdStrike != actualStatus.NetUsdStrike)
+            if (lastTotalStatus == null || 
+                lastTotalStatus.VelocityRisk.IsAlarm != actualTotalStatus.VelocityRisk.IsAlarm)
             {
-                await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualStatus);
+                await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualTotalStatus);
             }
         }
         
-        private AssetPortfolioStatus GetActualStatusByTotal(List<BalanceByAsset> assetBalances, AssetPortfolioSettings assetSettingsByAsset)
+        private AssetPortfolioStatus GetActualStatusByTotal(List<Portfolio.Asset> assetBalances, 
+            AssetPortfolioSettings assetSettingsByAsset)
         {
-            var totalUpl = assetBalances.Sum(e => e.UnrealisedPnl);
-            var totalNetUsd = assetBalances.Sum(e => e.UsdVolume);
-
-            var uplStrike = GetStrike(totalUpl, assetSettingsByAsset.PositiveUpl, assetSettingsByAsset.NegativeUpl);
-            var netUsdStrike = GetStrike(totalNetUsd, assetSettingsByAsset.PositiveNetUsd, assetSettingsByAsset.NegativeNetUsd);
+            var totalVelocityRiskInUsd = assetBalances.Sum(asset => asset.DailyVelocityRiskInUsd);
             
             var actualStatus = new AssetPortfolioStatus()
             {
                 Asset = AssetPortfolioSettingsNoSql.TotalSettingsAsset,
-                UpdateDate = DateTime.UtcNow,
-                UplStrike = uplStrike,
-                NetUsdStrike = netUsdStrike,
-                Upl = totalUpl,
-                NetUsd = totalNetUsd
+                VelocityRisk = ThresholdTotalVelocityRisk(totalVelocityRiskInUsd, 
+                    assetSettingsByAsset.VelocityRiskUsdMin)
             };
             return actualStatus;
         }
 
-        private AssetPortfolioStatus GetActualStatusByAsset(BalanceByAsset assetBalance, AssetPortfolioSettings assetSettingsByAsset)
+        private AssetPortfolioStatus GetActualStatusByAsset(Portfolio.Asset assetBalance, 
+            AssetPortfolioSettings assetSettingsByAsset)
         {
-            if (assetBalance.Asset != assetSettingsByAsset.Asset && 
+            if (assetBalance.Symbol != assetSettingsByAsset.Asset && 
                 AssetPortfolioSettingsNoSql.DefaultSettingsAsset != assetSettingsByAsset.Asset)
                 throw new Exception("Bad asset settings");
 
-            var uplStrike = GetStrike(assetBalance.UnrealisedPnl, assetSettingsByAsset.PositiveUpl, assetSettingsByAsset.NegativeUpl);
-            var netUsdStrike = GetStrike(assetBalance.UsdVolume, assetSettingsByAsset.PositiveNetUsd, assetSettingsByAsset.NegativeNetUsd);
+            var velocityStatus =  ThresholdVelocity(assetBalance.DailyVelocity, assetSettingsByAsset.VelocityMin, 
+                assetSettingsByAsset.VelocityMax);
+            var velocityRiskStatus =  ThresholdVelocityRisk(assetBalance.DailyVelocityRiskInUsd,
+                assetSettingsByAsset.VelocityRiskUsdMin);
             
             var actualStatus = new AssetPortfolioStatus()
             {
-                Asset = assetBalance.Asset,
-                UpdateDate = DateTime.UtcNow,
-                UplStrike = uplStrike,
-                NetUsdStrike = netUsdStrike,
-                Upl = assetBalance.UnrealisedPnl,
-                NetUsd = assetBalance.UsdVolume
+                Asset = assetBalance.Symbol,
+                Velocity = velocityStatus,
+                VelocityRisk = velocityRiskStatus
+
             };
             return actualStatus;
         }
 
-        public static decimal GetStrike(decimal value, List<decimal> positiveArr, List<decimal> negativeArr)
+        public static Status ThresholdVelocity(decimal value, decimal min, decimal max)
         {
-            if (value >= 0)
+            if (value <= min)
             {
-                if (positiveArr == null || !positiveArr.Any())
-                    return 0m;
-                if (value < positiveArr.Min())
-                    return 0m;
-                if (value >= positiveArr.Max())
-                    return positiveArr.Max();
-                
-                var strike = 0m;
-                foreach (var positiveValue in positiveArr.OrderBy(e => e))
+                return new Status
                 {
-                    if (value >= positiveValue)
-                    {
-                        strike = positiveValue;
-                        continue;
-                    }
-                    return strike;
-                }
-                throw new Exception(
-                    $"Something wrong in GetNetUsdStrike with value={value}" +
-                    $" and positiveArr={JsonConvert.SerializeObject(positiveArr)}" +
-                    $" and negativeArr={JsonConvert.SerializeObject(negativeArr)}");
+                    ThresholdDate = DateTime.UtcNow,
+                    CurrentValue = value,
+                    ThresholdValue = min,
+                    IsAlarm = true
+                };
             }
-            else
+            
+            if (value >= max)
             {
-                if (negativeArr == null || !negativeArr.Any())
-                    return 0m;
-                if (value > negativeArr.Max())
-                    return 0m;
-                if (value <= negativeArr.Min())
-                    return negativeArr.Min();
-
-                var strike = 0m;
-                foreach (var negativeValue in negativeArr.OrderByDescending(e => e))
+                return new Status
                 {
-                    if (value <= negativeValue)
-                    {
-                        strike = negativeValue;
-                        continue;
-                    }
-                    return strike;
-                }
-                throw new Exception(
-                    $"Something wrong in GetNetUsdStrike with value={value}" +
-                    $" and positiveArr={JsonConvert.SerializeObject(positiveArr)}" +
-                    $" and negativeArr={JsonConvert.SerializeObject(negativeArr)}");
+                    ThresholdDate = DateTime.UtcNow,
+                    CurrentValue = value,
+                    ThresholdValue = max,
+                    IsAlarm = true
+                };
             }
+            
+            return new Status
+            {
+                ThresholdDate = DateTime.UtcNow,
+                CurrentValue = value,
+                ThresholdValue = value,
+                IsAlarm = false
+            };
         }
+
+        public static Status ThresholdVelocityRisk(decimal value, decimal min)
+        {
+            if (value <= min)
+            {
+                return new Status
+                {
+                    ThresholdDate = DateTime.UtcNow,
+                    CurrentValue = value,
+                    ThresholdValue = min,
+                    IsAlarm = true
+                };
+            }
+            
+            return new Status
+            {
+                ThresholdDate = DateTime.UtcNow,
+                CurrentValue = value,
+                ThresholdValue = value,
+                IsAlarm = false
+            };
+        }        
+        
+        public static Status ThresholdTotalVelocityRisk(decimal value, decimal min)
+        {
+            if (value <= min)
+            {
+                return new Status
+                {
+                    ThresholdDate = DateTime.UtcNow,
+                    CurrentValue = value,
+                    ThresholdValue = min,
+                    IsAlarm = true
+                };
+            }
+            
+            return new Status
+            {
+                ThresholdDate = DateTime.UtcNow,
+                CurrentValue = value,
+                ThresholdValue = value,
+                IsAlarm = false
+            };
+        } 
     }
 }
