@@ -24,8 +24,9 @@ namespace Service.Liquidity.Monitoring.Services
             _settingsDataWriter = settingsDataWriter;
         }
 
-        public AssetPortfolioSettings GetAssetPortfolioSettingsByAsset(string asset)
+        public async Task<AssetPortfolioSettings> GetAssetPortfolioSettingsByAsset(string asset)
         {
+            await ReloadSettings();
             return _settings.TryGetValue(asset, out var result) ? result : null;
         }
 

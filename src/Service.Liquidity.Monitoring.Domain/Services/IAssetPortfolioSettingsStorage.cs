@@ -6,7 +6,7 @@ namespace Service.Liquidity.Monitoring.Domain.Services
 {
     public interface IAssetPortfolioSettingsStorage
     {
-        AssetPortfolioSettings GetAssetPortfolioSettingsByAsset(string asset);
+        Task<AssetPortfolioSettings> GetAssetPortfolioSettingsByAsset(string asset);
         List<AssetPortfolioSettings> GetAssetPortfolioSettings();
         Task UpdateAssetPortfolioSettingsAsync(AssetPortfolioSettings settings);
     }

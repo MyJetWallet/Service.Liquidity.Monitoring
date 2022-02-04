@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using MyJetWallet.Sdk.NoSql;
+using MyJetWallet.Sdk.ServiceBus;
 using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Jobs;
@@ -31,7 +32,14 @@ namespace Service.Liquidity.Monitoring.Modules
                 .AutoActivate()
                 .SingleInstance();
             
-            builder.RegisterType<CheckAssetPortfolioStatusBackgroundService>().SingleInstance().AutoActivate().AsSelf();            
+            builder.RegisterType<CheckAssetPortfolioStatusBackgroundService>().SingleInstance().AutoActivate().AsSelf();           
+            
+            var serviceBusClient = builder.RegisterMyServiceBusTcpClient(
+                Program.ReloadedSettings(e => e.SpotServiceBusHostPort), 
+                Program.LogFactory);
+            //Publishers
+            builder.RegisterMyServiceBusPublisher<AssetPortfolioStatusMessage>(serviceBusClient, AssetPortfolioStatusMessage.TopicName, true);
+            
         }
     }
 }

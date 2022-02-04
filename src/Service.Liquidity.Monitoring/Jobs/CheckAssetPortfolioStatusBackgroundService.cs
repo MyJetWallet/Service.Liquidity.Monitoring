@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service.Tools;
+using MyJetWallet.Sdk.ServiceBus;
 using MyNoSqlServer.Abstractions;
 using Newtonsoft.Json;
 using Service.Liquidity.Monitoring.Domain.Models;
@@ -22,6 +23,7 @@ namespace Service.Liquidity.Monitoring.Jobs
         private readonly IAssetPortfolioSettingsStorage _assetPortfolioSettingsStorage;
         private readonly IAssetPortfolioStatusStorage _assetPortfolioStatusStorage;
         private readonly MyTaskTimer _operationsTimer;
+        private IServiceBusPublisher<AssetPortfolioStatusMessage> _assetPortfolioStatusPublisher;
 #if DEBUG
         private const int TimerSpanSec = 30;
 #else
@@ -32,12 +34,14 @@ namespace Service.Liquidity.Monitoring.Jobs
             IMyNoSqlServerDataReader<PortfolioNoSql> myNoSqlServerDataReader,
             ILogger<CheckAssetPortfolioStatusBackgroundService> logger,
             IAssetPortfolioSettingsStorage assetPortfolioSettingsStorage,
-            IAssetPortfolioStatusStorage assetPortfolioStatusStorage)
+            IAssetPortfolioStatusStorage assetPortfolioStatusStorage, 
+            IServiceBusPublisher<AssetPortfolioStatusMessage> assetPortfolioStatusPublisher)
         {
             _myNoSqlServerDataReader = myNoSqlServerDataReader;
             _logger = logger;
             _assetPortfolioSettingsStorage = assetPortfolioSettingsStorage;
             _assetPortfolioStatusStorage = assetPortfolioStatusStorage;
+            _assetPortfolioStatusPublisher = assetPortfolioStatusPublisher;
             _operationsTimer = new MyTaskTimer(nameof(CheckAssetPortfolioStatusBackgroundService), 
                 TimeSpan.FromSeconds(TimerSpanSec), logger, Process);
         }
@@ -71,10 +75,10 @@ namespace Service.Liquidity.Monitoring.Jobs
             foreach (var asset in assets.Values)
             {
                 
-                var assetSettingsByAsset = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(asset.Symbol);
+                var assetSettingsByAsset = await _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(asset.Symbol);
                 if (assetSettingsByAsset == null)
                 {
-                    assetSettingsByAsset = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(AssetPortfolioSettingsNoSql.DefaultSettingsAsset);
+                    assetSettingsByAsset = await _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(AssetPortfolioSettingsNoSql.DefaultSettingsAsset);
                 }
                 if (assetSettingsByAsset == null)
                 {
@@ -85,15 +89,23 @@ namespace Service.Liquidity.Monitoring.Jobs
                 var lastAssetStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(asset.Symbol);
                 var actualAssetStatus = GetActualStatusByAsset(asset, assetSettingsByAsset);
 
-                if (lastAssetStatus == null || 
-                    (lastAssetStatus.Velocity.IsAlarm != actualAssetStatus.Velocity.IsAlarm) ||
-                    (lastAssetStatus.VelocityRisk.IsAlarm != actualAssetStatus.VelocityRisk.IsAlarm))
+                if (lastAssetStatus != null)
                 {
-                    await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
+                    if (lastAssetStatus.Velocity.IsAlarm != actualAssetStatus.Velocity.IsAlarm)
+                    {
+                        await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
+                        await PublishAssetStatusAsync(PrepareVelosityMessage(actualAssetStatus));
+                    }
+                
+                    if(lastAssetStatus.VelocityRisk.IsAlarm != actualAssetStatus.VelocityRisk.IsAlarm)
+                    {
+                        await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
+                        await PublishAssetStatusAsync(PrepareVelosityRiskMessage(actualAssetStatus));
+                    }
                 }
             }
             // Check Total
-            var assetSettingsByTotal = _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
+            var assetSettingsByTotal = await _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
             if (assetSettingsByTotal == null)
             {
                 _logger.LogError($"Total settings not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
@@ -108,6 +120,49 @@ namespace Service.Liquidity.Monitoring.Jobs
                 await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualTotalStatus);
             }
         }
+
+        //Velocity hit limit -5%
+        //Current value: -5.5% 
+        //Date: 2022-01-28 10:00:00
+        private AssetPortfolioStatusMessage PrepareVelosityMessage(AssetPortfolioStatus actualAssetStatus)
+        {
+
+            var message = (actualAssetStatus.Velocity.IsAlarm
+                ? $"{actualAssetStatus.Asset} velocity hit limit: {actualAssetStatus.Velocity.ThresholdValue}\r\n"
+                : $"{actualAssetStatus.Asset} velocity back to normal\r\n") +
+                  $"Current value: {actualAssetStatus.Velocity.CurrentValue}\r\n" +
+                  $"Date: {actualAssetStatus.Velocity.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
+
+            return new AssetPortfolioStatusMessage
+            {
+                Asset = actualAssetStatus.Asset,
+                ThresholdDate = actualAssetStatus.Velocity.ThresholdDate,
+                CurrentValue = actualAssetStatus.Velocity.CurrentValue,
+                ThresholdValue = actualAssetStatus.Velocity.ThresholdValue,
+                IsAlarm = actualAssetStatus.Velocity.IsAlarm,
+                Message = message
+            };
+        }
+
+        private AssetPortfolioStatusMessage PrepareVelosityRiskMessage(AssetPortfolioStatus actualAssetStatus)
+        {
+
+            var message = (actualAssetStatus.VelocityRisk.IsAlarm
+                ? $"{actualAssetStatus.Asset} Alarm Net hit limit {actualAssetStatus.VelocityRisk.ThresholdValue}\r\n"
+                : $"{actualAssetStatus.Asset} Alarm Net back to normal\r\n") +
+                  $"Current value: {actualAssetStatus.VelocityRisk.CurrentValue}\r\n" +
+                  $"Date: {actualAssetStatus.VelocityRisk.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
+
+            return new AssetPortfolioStatusMessage
+            {
+                Asset = actualAssetStatus.Asset,
+                ThresholdDate = actualAssetStatus.VelocityRisk.ThresholdDate,
+                CurrentValue = actualAssetStatus.VelocityRisk.CurrentValue,
+                ThresholdValue = actualAssetStatus.VelocityRisk.ThresholdValue,
+                IsAlarm = actualAssetStatus.VelocityRisk.IsAlarm,
+                Message = message
+            };
+        }        
         
         private AssetPortfolioStatus GetActualStatusByTotal(List<Portfolio.Asset> assetBalances, 
             AssetPortfolioSettings assetSettingsByAsset)
@@ -130,10 +185,11 @@ namespace Service.Liquidity.Monitoring.Jobs
                 AssetPortfolioSettingsNoSql.DefaultSettingsAsset != assetSettingsByAsset.Asset)
                 throw new Exception("Bad asset settings");
 
-            var velocityStatus =  ThresholdVelocity(assetBalance.DailyVelocity, assetSettingsByAsset.VelocityMin, 
-                assetSettingsByAsset.VelocityMax);
-            var velocityRiskStatus =  ThresholdVelocityRisk(assetBalance.DailyVelocityRiskInUsd,
-                assetSettingsByAsset.VelocityRiskUsdMin);
+            var velocityStatus =  ThresholdVelocity(Math.Round(assetBalance.DailyVelocity, 2), Math.Round(assetSettingsByAsset.VelocityMin, 2), 
+                Math.Round(assetSettingsByAsset.VelocityMax, 2));
+            
+            var velocityRiskStatus =  ThresholdVelocityRisk(Math.Round(assetBalance.DailyVelocityRiskInUsd, 2),
+                Math.Round(assetSettingsByAsset.VelocityRiskUsdMin, 2));
             
             var actualStatus = new AssetPortfolioStatus()
             {
@@ -220,6 +276,12 @@ namespace Service.Liquidity.Monitoring.Jobs
                 ThresholdValue = min,
                 IsAlarm = false
             };
-        } 
+        }
+        
+        private async Task PublishAssetStatusAsync(AssetPortfolioStatusMessage message)
+        {
+            await _assetPortfolioStatusPublisher.PublishAsync(message);
+        }
     }
+
 }

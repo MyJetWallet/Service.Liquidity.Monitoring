@@ -19,5 +19,8 @@ namespace Service.Liquidity.Monitoring.Settings
 
         [YamlProperty("LiquidityMonitoring.MyNoSqlReaderHostPort")]
         public string MyNoSqlReaderHostPort { get; set; }
+        
+        [YamlProperty("LiquidityMonitoring.SpotServiceBusHostPort")]
+        public string SpotServiceBusHostPort { get; set; }
     }
 }
