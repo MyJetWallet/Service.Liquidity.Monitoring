@@ -16,7 +16,7 @@ namespace Service.Liquidity.Monitoring.Tests
         [TestCase(10, -5, 5, true)]
         public void TestThresholdVelocity(decimal currValue, decimal min, decimal max, bool result)
         {
-            var strike = AssetPortfolioStateHandler.ThresholdVelocity(currValue, min, max);
+            var strike = CheckAssetPortfolioStatusBackgroundService.ThresholdVelocity(currValue, min, max);
             Assert.AreEqual(result, strike.IsAlarm);
         }
 
@@ -26,7 +26,7 @@ namespace Service.Liquidity.Monitoring.Tests
         [TestCase(5000, -5000,  false)]
         public void ThresholdTotalVelocityRisk(decimal currValue, decimal min, bool result)
         {
-            var strike = AssetPortfolioStateHandler.ThresholdVelocityRisk(currValue, min);
+            var strike = CheckAssetPortfolioStatusBackgroundService.ThresholdVelocityRisk(currValue, min);
             Assert.AreEqual(result, strike.IsAlarm);
         }
     }

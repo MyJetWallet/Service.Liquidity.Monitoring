@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Logging;
+using MyJetWallet.Sdk.Service.Tools;
 using MyNoSqlServer.Abstractions;
 using Newtonsoft.Json;
 using Service.Liquidity.Monitoring.Domain.Models;
@@ -14,15 +15,22 @@ using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
 
 namespace Service.Liquidity.Monitoring.Jobs
 {
-    public class AssetPortfolioStateHandler : IStartable
+    public class CheckAssetPortfolioStatusBackgroundService
     {
-        private readonly ILogger<AssetPortfolioStateHandler> _logger;
+        private readonly ILogger<CheckAssetPortfolioStatusBackgroundService> _logger;
         private readonly IMyNoSqlServerDataReader<PortfolioNoSql> _myNoSqlServerDataReader;
         private readonly IAssetPortfolioSettingsStorage _assetPortfolioSettingsStorage;
         private readonly IAssetPortfolioStatusStorage _assetPortfolioStatusStorage;
-
-        public AssetPortfolioStateHandler(IMyNoSqlServerDataReader<PortfolioNoSql> myNoSqlServerDataReader,
-            ILogger<AssetPortfolioStateHandler> logger,
+        private readonly MyTaskTimer _operationsTimer;
+#if DEBUG
+        private const int TimerSpanSec = 30;
+#else
+        private const int TimerSpanSec = 60;
+#endif    
+        
+        public CheckAssetPortfolioStatusBackgroundService(
+            IMyNoSqlServerDataReader<PortfolioNoSql> myNoSqlServerDataReader,
+            ILogger<CheckAssetPortfolioStatusBackgroundService> logger,
             IAssetPortfolioSettingsStorage assetPortfolioSettingsStorage,
             IAssetPortfolioStatusStorage assetPortfolioStatusStorage)
         {
@@ -30,28 +38,28 @@ namespace Service.Liquidity.Monitoring.Jobs
             _logger = logger;
             _assetPortfolioSettingsStorage = assetPortfolioSettingsStorage;
             _assetPortfolioStatusStorage = assetPortfolioStatusStorage;
+            _operationsTimer = new MyTaskTimer(nameof(CheckAssetPortfolioStatusBackgroundService), 
+                TimeSpan.FromSeconds(TimerSpanSec), logger, Process);
         }
 
         public void Start()
         {
-            _myNoSqlServerDataReader.SubscribeToUpdateEvents(HandleUpdate, HandleDelete);
+            _operationsTimer.Start();
+        }
+        public void Stop()
+        {
+            _operationsTimer.Stop();
         }
 
-        private void HandleDelete(IReadOnlyList<PortfolioNoSql> balances)
+        private async Task Process()
         {
-            _logger.LogInformation("Handle Delete message from PortfolioNoSql<");
+            var portfolio = _myNoSqlServerDataReader.Get().FirstOrDefault();
+            _logger.LogInformation("Get portfolio from PortfolioNoSql");
+            await RefreshStatuses(portfolio?.Portfolio);
         }
 
-        private void HandleUpdate(IReadOnlyList<PortfolioNoSql> balances)
+        private async Task RefreshStatuses(Portfolio portfolio)
         {
-            _logger.LogInformation("Handle Update message from PortfolioNoSql");
-
-            RefreshStatuses(balances).GetAwaiter().GetResult();
-        }
-
-        private async Task RefreshStatuses(IReadOnlyList<PortfolioNoSql> assetPortfolioBalance)
-        {
-            var portfolio = assetPortfolioBalance.FirstOrDefault()?.Portfolio;
             var assets = portfolio?.Assets;
             
             if (assets == null || !assets.Any())
@@ -131,7 +139,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             {
                 Asset = assetBalance.Symbol,
                 Velocity = velocityStatus,
-                VelocityRisk = velocityRiskStatus
+                VelocityRisk = velocityRiskStatus,
 
             };
             return actualStatus;

@@ -31,11 +31,7 @@ namespace Service.Liquidity.Monitoring.Modules
                 .AutoActivate()
                 .SingleInstance();
             
-            builder
-                .RegisterType<AssetPortfolioStateHandler>()
-                .As<IStartable>()
-                .AutoActivate()
-                .SingleInstance();
+            builder.RegisterType<CheckAssetPortfolioStatusBackgroundService>().SingleInstance().AutoActivate().AsSelf();            
         }
     }
 }
