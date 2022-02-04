@@ -165,7 +165,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             {
                 ThresholdDate = DateTime.UtcNow,
                 CurrentValue = value,
-                ThresholdValue = value,
+                ThresholdValue = value < 0 ? min : max,
                 IsAlarm = false
             };
         }
@@ -187,7 +187,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             {
                 ThresholdDate = DateTime.UtcNow,
                 CurrentValue = value,
-                ThresholdValue = value,
+                ThresholdValue = min,
                 IsAlarm = false
             };
         }        
@@ -209,7 +209,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             {
                 ThresholdDate = DateTime.UtcNow,
                 CurrentValue = value,
-                ThresholdValue = value,
+                ThresholdValue = min,
                 IsAlarm = false
             };
         } 
