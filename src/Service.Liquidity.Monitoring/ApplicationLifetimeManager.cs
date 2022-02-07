@@ -41,9 +41,9 @@ namespace Service.Liquidity.Monitoring
         protected override void OnStopping()
         {
             _logger.LogInformation("OnStopping has been called.");
+            _myServiceBusTcpClient.Stop();
             _checkAssetPortfolioStatusBackgroundService.Stop();
             _myNoSqlClientLifeTime.Stop();
-            _myServiceBusTcpClient.Stop();
         }
 
         protected override void OnStopped()
