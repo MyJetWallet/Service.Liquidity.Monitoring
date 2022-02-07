@@ -14,7 +14,6 @@ namespace Service.Liquidity.Monitoring.Services
     {
         private readonly ILogger<AssetPortfolioSettingsStorage> _logger;
         private readonly IMyNoSqlServerDataWriter<AssetPortfolioSettingsNoSql> _settingsDataWriter;
-        
         private Dictionary<string, AssetPortfolioSettings> _settings = new Dictionary<string, AssetPortfolioSettings>();
 
         public AssetPortfolioSettingsStorage(ILogger<AssetPortfolioSettingsStorage> logger,

@@ -1,7 +1,9 @@
 ﻿using System;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MyJetWallet.Sdk.NoSql;
 using MyJetWallet.Sdk.Service;
+using MyJetWallet.Sdk.ServiceBus;
 using MyNoSqlServer.DataReader;
 using Service.Liquidity.Monitoring.Jobs;
 
@@ -10,45 +12,38 @@ namespace Service.Liquidity.Monitoring
     public class ApplicationLifetimeManager : ApplicationLifetimeManagerBase
     {
         private readonly ILogger<ApplicationLifetimeManager> _logger;
-        private readonly MyNoSqlTcpClient[] _myNoSqlTcpClientManagers;
         private readonly CheckAssetPortfolioStatusBackgroundService _checkAssetPortfolioStatusBackgroundService;
+        private readonly ServiceBusLifeTime _myServiceBusTcpClient;
+        private readonly MyNoSqlClientLifeTime _myNoSqlClientLifeTime;
 
         public ApplicationLifetimeManager(IHostApplicationLifetime appLifetime,
             ILogger<ApplicationLifetimeManager> logger,
             MyNoSqlTcpClient[] myNoSqlTcpClientManagers, 
-            CheckAssetPortfolioStatusBackgroundService checkAssetPortfolioStatusBackgroundService)
+            CheckAssetPortfolioStatusBackgroundService checkAssetPortfolioStatusBackgroundService, 
+            ServiceBusLifeTime myServiceBusTcpClient, 
+            MyNoSqlClientLifeTime myNoSqlClientLifeTime)
             : base(appLifetime)
         {
             _logger = logger;
-            _myNoSqlTcpClientManagers = myNoSqlTcpClientManagers;
             _checkAssetPortfolioStatusBackgroundService = checkAssetPortfolioStatusBackgroundService;
+            _myServiceBusTcpClient = myServiceBusTcpClient;
+            _myNoSqlClientLifeTime = myNoSqlClientLifeTime;
         }
 
         protected override void OnStarted()
         {
             _logger.LogInformation("OnStarted has been called.");
+            _myNoSqlClientLifeTime.Start();
             _checkAssetPortfolioStatusBackgroundService.Start();
-            foreach(var client in _myNoSqlTcpClientManagers)
-            {
-                client.Start();
-            }
+            _myServiceBusTcpClient.Start();
         }
 
         protected override void OnStopping()
         {
             _logger.LogInformation("OnStopping has been called.");
             _checkAssetPortfolioStatusBackgroundService.Stop();
-            foreach(var client in _myNoSqlTcpClientManagers)
-            {
-                try
-                {
-                    client.Stop();
-                }
-                catch(Exception ex)
-                {
-                    Console.WriteLine(ex);
-                }
-            }
+            _myNoSqlClientLifeTime.Stop();
+            _myServiceBusTcpClient.Stop();
         }
 
         protected override void OnStopped()

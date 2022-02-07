@@ -34,9 +34,11 @@ namespace Service.Liquidity.Monitoring.Modules
             
             builder.RegisterType<CheckAssetPortfolioStatusBackgroundService>().SingleInstance().AutoActivate().AsSelf();           
             
+            // Service Bus
             var serviceBusClient = builder.RegisterMyServiceBusTcpClient(
                 Program.ReloadedSettings(e => e.SpotServiceBusHostPort), 
                 Program.LogFactory);
+            
             //Publishers
             builder.RegisterMyServiceBusPublisher<AssetPortfolioStatusMessage>(serviceBusClient, AssetPortfolioStatusMessage.TopicName, true);
             
