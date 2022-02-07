@@ -32,7 +32,10 @@ namespace Service.Liquidity.Monitoring.Modules
                 .AutoActivate()
                 .SingleInstance();
             
-            builder.RegisterType<CheckAssetPortfolioStatusBackgroundService>().SingleInstance().AutoActivate().AsSelf();           
+            builder.RegisterType<CheckAssetPortfolioStatusBackgroundService>()
+                .SingleInstance()
+                .AutoActivate()
+                .AsSelf();           
             
             // Service Bus
             var serviceBusClient = builder.RegisterMyServiceBusTcpClient(

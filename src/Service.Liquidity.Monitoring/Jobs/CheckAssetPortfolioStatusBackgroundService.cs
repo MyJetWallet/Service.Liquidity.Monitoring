@@ -76,7 +76,6 @@ namespace Service.Liquidity.Monitoring.Jobs
             // Check asset velocity and velocityRisk
             foreach (var asset in assets.Values)
             {
-                
                 var assetSettingsByAsset = await _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(asset.Symbol);
                 if (assetSettingsByAsset == null)
                 {
@@ -90,7 +89,10 @@ namespace Service.Liquidity.Monitoring.Jobs
                 
                 var lastAssetStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(asset.Symbol);
                 var actualAssetStatus = GetActualStatusByAsset(asset, assetSettingsByAsset);
-
+                
+                _logger.LogInformation("Check asset {asset} {@lastAssetStatus} {@actualAssetStatus}", 
+                    asset.Symbol, lastAssetStatus, actualAssetStatus);
+                
                 if (lastAssetStatus != null)
                 {
                     if (lastAssetStatus.Velocity.IsAlarm != actualAssetStatus.Velocity.IsAlarm)
@@ -106,6 +108,11 @@ namespace Service.Liquidity.Monitoring.Jobs
                         await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
                         await PublishAssetStatusAsync(PrepareVelocityRiskMessage(actualAssetStatus));
                     }
+                }
+                else
+                {
+                    _logger.LogInformation("Set default {asset} status {status}", asset.Symbol, actualAssetStatus.ToJson());
+                    await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
                 }
             }
             // Check Total
