@@ -29,7 +29,8 @@ namespace Service.Liquidity.Monitoring.Jobs
 #else
         private const int TimerSpanSec = 60;
 #endif    
-        
+        private const string SuccessUnicode = "👍";
+        private const string FailUnicode = "👎🏿";        
         public CheckAssetPortfolioStatusBackgroundService(
             IMyNoSqlServerDataReader<PortfolioNoSql> myNoSqlServerDataReader,
             ILogger<CheckAssetPortfolioStatusBackgroundService> logger,
@@ -128,8 +129,8 @@ namespace Service.Liquidity.Monitoring.Jobs
         {
 
             var message = (actualAssetStatus.Velocity.IsAlarm
-                ? $"{actualAssetStatus.Asset} velocity hit limit: {actualAssetStatus.Velocity.ThresholdValue}\r\n"
-                : $"{actualAssetStatus.Asset} velocity back to normal\r\n") +
+                ? $"{FailUnicode} {actualAssetStatus.Asset} velocity hit limit: {actualAssetStatus.Velocity.ThresholdValue}\r\n"
+                : $"{SuccessUnicode} {actualAssetStatus.Asset} velocity back to normal\r\n") +
                   $"Current value: {actualAssetStatus.Velocity.CurrentValue}\r\n" +
                   $"Date: {actualAssetStatus.Velocity.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
 
@@ -146,7 +147,6 @@ namespace Service.Liquidity.Monitoring.Jobs
 
         private AssetPortfolioStatusMessage PrepareVelosityRiskMessage(AssetPortfolioStatus actualAssetStatus)
         {
-
             var message = (actualAssetStatus.VelocityRisk.IsAlarm
                 ? $"{actualAssetStatus.Asset} Alarm Net hit limit {actualAssetStatus.VelocityRisk.ThresholdValue}\r\n"
                 : $"{actualAssetStatus.Asset} Alarm Net back to normal\r\n") +
