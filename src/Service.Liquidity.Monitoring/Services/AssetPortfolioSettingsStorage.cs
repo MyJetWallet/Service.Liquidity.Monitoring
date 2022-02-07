@@ -57,15 +57,12 @@ namespace Service.Liquidity.Monitoring.Services
             }
 
             _settings = settingsMap;
-
-            await CheckDefaultValues();
         }
 
         private async Task CheckDefaultValues()
         {
-            var settings = GetAssetPortfolioSettings();
-
-            if (!settings.Select(e => e.Asset).Contains(AssetPortfolioSettingsNoSql.DefaultSettingsAsset))
+            var settings = (await _settingsDataWriter.GetAsync()).ToList();
+            if (!settings.Select(e => e.PartitionKey).Contains(AssetPortfolioSettingsNoSql.DefaultSettingsAsset))
             {
                 var defaultSettings = new AssetPortfolioSettings
                 {
@@ -77,7 +74,7 @@ namespace Service.Liquidity.Monitoring.Services
                 await UpdateAssetPortfolioSettingsAsync(defaultSettings);
             }
             
-            if (!settings.Select(e => e.Asset).Contains(AssetPortfolioSettingsNoSql.TotalSettingsAsset))
+            if (!settings.Select(e => e.PartitionKey).Contains(AssetPortfolioSettingsNoSql.TotalSettingsAsset))
             {
                 var totalSettings = new AssetPortfolioSettings
                 {
@@ -92,6 +89,7 @@ namespace Service.Liquidity.Monitoring.Services
 
         public void Start()
         {
+            CheckDefaultValues().GetAwaiter().GetResult();
             ReloadSettings().GetAwaiter().GetResult();
         }
     }
