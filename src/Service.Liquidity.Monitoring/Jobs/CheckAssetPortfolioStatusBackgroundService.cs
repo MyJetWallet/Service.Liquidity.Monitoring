@@ -95,14 +95,14 @@ namespace Service.Liquidity.Monitoring.Jobs
                 {
                     if (lastAssetStatus.Velocity.IsAlarm != actualAssetStatus.Velocity.IsAlarm)
                     {
-                        _logger.LogInformation($"New velocity alert {actualAssetStatus.ToJson() }");
+                        _logger.LogInformation("New velocity alert {status}", actualAssetStatus.ToJson());
                         await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
                         await PublishAssetStatusAsync(PrepareVelocityMessage(actualAssetStatus));
                     }
                 
                     if(lastAssetStatus.VelocityRisk.IsAlarm != actualAssetStatus.VelocityRisk.IsAlarm)
                     {
-                        _logger.LogInformation($"New velocity risk alert {actualAssetStatus.ToJson() }");
+                        _logger.LogInformation("New velocity risk alert {status}", actualAssetStatus.ToJson());
                         await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
                         await PublishAssetStatusAsync(PrepareVelocityRiskMessage(actualAssetStatus));
                     }
@@ -121,7 +121,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             if (lastTotalStatus == null || 
                 lastTotalStatus.VelocityRisk.IsAlarm != actualTotalStatus.VelocityRisk.IsAlarm)
             {
-                _logger.LogInformation($"New total velocity risk alert {actualTotalStatus.ToJson() }");
+                _logger.LogInformation("New total velocity risk alert {status}", actualTotalStatus.ToJson());
                 await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualTotalStatus);
             }
         }
@@ -137,7 +137,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                   $"Current value: {actualAssetStatus.Velocity.CurrentValue}\r\n" +
                   $"Date: {actualAssetStatus.Velocity.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
 
-            _logger.LogInformation($"Prepare velocity message {message}");
+            _logger.LogInformation("Prepare velocity message: {message}", message);
             
             return new AssetPortfolioStatusMessage
             {
@@ -158,7 +158,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                   $"Current value: {actualAssetStatus.VelocityRisk.CurrentValue}\r\n" +
                   $"Date: {actualAssetStatus.VelocityRisk.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
            
-            _logger.LogInformation($"Prepare velocity risk message {message}");
+            _logger.LogInformation("Prepare velocity risk message: {message}", message);
             
             return new AssetPortfolioStatusMessage
             {
