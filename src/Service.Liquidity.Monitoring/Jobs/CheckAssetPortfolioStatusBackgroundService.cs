@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Logging;
+using MyJetWallet.Sdk.Service;
 using MyJetWallet.Sdk.Service.Tools;
 using MyJetWallet.Sdk.ServiceBus;
 using MyNoSqlServer.Abstractions;
@@ -94,14 +95,16 @@ namespace Service.Liquidity.Monitoring.Jobs
                 {
                     if (lastAssetStatus.Velocity.IsAlarm != actualAssetStatus.Velocity.IsAlarm)
                     {
+                        _logger.LogInformation($"New velocity alert {actualAssetStatus.ToJson() }");
                         await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
-                        await PublishAssetStatusAsync(PrepareVelosityMessage(actualAssetStatus));
+                        await PublishAssetStatusAsync(PrepareVelocityMessage(actualAssetStatus));
                     }
                 
                     if(lastAssetStatus.VelocityRisk.IsAlarm != actualAssetStatus.VelocityRisk.IsAlarm)
                     {
+                        _logger.LogInformation($"New velocity risk alert {actualAssetStatus.ToJson() }");
                         await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
-                        await PublishAssetStatusAsync(PrepareVelosityRiskMessage(actualAssetStatus));
+                        await PublishAssetStatusAsync(PrepareVelocityRiskMessage(actualAssetStatus));
                     }
                 }
             }
@@ -118,6 +121,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             if (lastTotalStatus == null || 
                 lastTotalStatus.VelocityRisk.IsAlarm != actualTotalStatus.VelocityRisk.IsAlarm)
             {
+                _logger.LogInformation($"New total velocity risk alert {actualTotalStatus.ToJson() }");
                 await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualTotalStatus);
             }
         }
@@ -125,15 +129,16 @@ namespace Service.Liquidity.Monitoring.Jobs
         //Velocity hit limit -5%
         //Current value: -5.5% 
         //Date: 2022-01-28 10:00:00
-        private AssetPortfolioStatusMessage PrepareVelosityMessage(AssetPortfolioStatus actualAssetStatus)
+        private AssetPortfolioStatusMessage PrepareVelocityMessage(AssetPortfolioStatus actualAssetStatus)
         {
-
             var message = (actualAssetStatus.Velocity.IsAlarm
                 ? $"{FailUnicode} {actualAssetStatus.Asset} velocity hit limit: {actualAssetStatus.Velocity.ThresholdValue}\r\n"
                 : $"{SuccessUnicode} {actualAssetStatus.Asset} velocity back to normal\r\n") +
                   $"Current value: {actualAssetStatus.Velocity.CurrentValue}\r\n" +
                   $"Date: {actualAssetStatus.Velocity.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
 
+            _logger.LogInformation($"Prepare velocity message {message}");
+            
             return new AssetPortfolioStatusMessage
             {
                 Asset = actualAssetStatus.Asset,
@@ -145,14 +150,16 @@ namespace Service.Liquidity.Monitoring.Jobs
             };
         }
 
-        private AssetPortfolioStatusMessage PrepareVelosityRiskMessage(AssetPortfolioStatus actualAssetStatus)
+        private AssetPortfolioStatusMessage PrepareVelocityRiskMessage(AssetPortfolioStatus actualAssetStatus)
         {
             var message = (actualAssetStatus.VelocityRisk.IsAlarm
                 ? $"{actualAssetStatus.Asset} Alarm Net hit limit {actualAssetStatus.VelocityRisk.ThresholdValue}\r\n"
                 : $"{actualAssetStatus.Asset} Alarm Net back to normal\r\n") +
                   $"Current value: {actualAssetStatus.VelocityRisk.CurrentValue}\r\n" +
                   $"Date: {actualAssetStatus.VelocityRisk.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
-
+           
+            _logger.LogInformation($"Prepare velocity risk message {message}");
+            
             return new AssetPortfolioStatusMessage
             {
                 Asset = actualAssetStatus.Asset,
