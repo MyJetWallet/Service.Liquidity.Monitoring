@@ -30,7 +30,7 @@ namespace Service.Liquidity.Monitoring.Jobs
         private const int TimerSpanSec = 60;
 #endif    
         private const string SuccessUnicode = "👍";
-        private const string FailUnicode = "👎🏿";        
+        private const string FailUnicode = "\u2757";        
         public CheckAssetPortfolioStatusBackgroundService(
             IMyNoSqlServerDataReader<PortfolioNoSql> myNoSqlServerDataReader,
             ILogger<CheckAssetPortfolioStatusBackgroundService> logger,
