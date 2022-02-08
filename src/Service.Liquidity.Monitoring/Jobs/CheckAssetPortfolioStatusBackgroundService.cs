@@ -90,7 +90,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                 var lastAssetStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(asset.Symbol);
                 var actualAssetStatus = GetActualStatusByAsset(asset, assetSettingsByAsset);
                 
-                _logger.LogInformation("Check asset {asset} {@lastAssetStatus} {@actualAssetStatus}", 
+                _logger.LogInformation("Check asset {asset} last: {@lastAssetStatus} current: {@actualAssetStatus}", 
                     asset.Symbol, lastAssetStatus, actualAssetStatus);
                 
                 if (lastAssetStatus != null)
@@ -160,8 +160,8 @@ namespace Service.Liquidity.Monitoring.Jobs
         private AssetPortfolioStatusMessage PrepareVelocityRiskMessage(AssetPortfolioStatus actualAssetStatus)
         {
             var message = (actualAssetStatus.VelocityRisk.IsAlarm
-                ? $"{actualAssetStatus.Asset} Alarm Net hit limit {actualAssetStatus.VelocityRisk.ThresholdValue}\r\n"
-                : $"{actualAssetStatus.Asset} Alarm Net back to normal\r\n") +
+                ? $"{FailUnicode} {actualAssetStatus.Asset} Alarm Net hit limit {actualAssetStatus.VelocityRisk.ThresholdValue}\r\n"
+                : $"{SuccessUnicode} {actualAssetStatus.Asset} Alarm Net back to normal\r\n") +
                   $"Current value: {actualAssetStatus.VelocityRisk.CurrentValue}\r\n" +
                   $"Date: {actualAssetStatus.VelocityRisk.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
            
@@ -192,22 +192,22 @@ namespace Service.Liquidity.Monitoring.Jobs
             return actualStatus;
         }
 
-        private AssetPortfolioStatus GetActualStatusByAsset(Portfolio.Asset assetBalance, 
+        private AssetPortfolioStatus GetActualStatusByAsset(Portfolio.Asset asset, 
             AssetPortfolioSettings assetSettingsByAsset)
         {
-            if (assetBalance.Symbol != assetSettingsByAsset.Asset && 
+            if (asset.Symbol != assetSettingsByAsset.Asset && 
                 AssetPortfolioSettingsNoSql.DefaultSettingsAsset != assetSettingsByAsset.Asset)
                 throw new Exception("Bad asset settings");
 
-            var velocityStatus =  ThresholdVelocity(Math.Round(assetBalance.DailyVelocity, 2), Math.Round(assetSettingsByAsset.VelocityMin, 2), 
+            var velocityStatus =  ThresholdVelocity(Math.Round(asset.DailyVelocity, 2), Math.Round(assetSettingsByAsset.VelocityMin, 2), 
                 Math.Round(assetSettingsByAsset.VelocityMax, 2));
             
-            var velocityRiskStatus =  ThresholdVelocityRisk(Math.Round(assetBalance.DailyVelocityRiskInUsd, 2),
+            var velocityRiskStatus =  ThresholdVelocityRisk(Math.Round(asset.DailyVelocityRiskInUsd, 2),
                 Math.Round(assetSettingsByAsset.VelocityRiskUsdMin, 2));
             
             var actualStatus = new AssetPortfolioStatus()
             {
-                Asset = assetBalance.Symbol,
+                Asset = asset.Symbol,
                 Velocity = velocityStatus,
                 VelocityRisk = velocityRiskStatus,
 
