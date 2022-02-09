@@ -73,6 +73,8 @@ namespace Service.Liquidity.Monitoring.Jobs
                 _logger.LogError($"{PortfolioNoSql.TableName} is empty!!!");
                 return;
             }
+
+            List<AssetPortfolioStatus> isAlarmRiskAssets = new List<AssetPortfolioStatus>();
             // Check asset velocity and velocityRisk
             foreach (var asset in assets.Values)
             {
@@ -108,6 +110,22 @@ namespace Service.Liquidity.Monitoring.Jobs
                         await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
                         await PublishAssetStatusAsync(PrepareVelocityRiskMessage(actualAssetStatus));
                     }
+
+                    if (lastAssetStatus.VelocityRisk.IsAlarm)
+                    {
+                        isAlarmRiskAssets.Add(new AssetPortfolioStatus
+                        {
+                            Asset = lastAssetStatus.Asset,
+                            Velocity = null,
+                            VelocityRisk = new Status
+                            {
+                                ThresholdDate = lastAssetStatus.VelocityRisk.ThresholdDate,
+                                CurrentValue = lastAssetStatus.VelocityRisk.CurrentValue,
+                                ThresholdValue = lastAssetStatus.VelocityRisk.ThresholdValue,
+                                IsAlarm = lastAssetStatus.VelocityRisk.IsAlarm
+                            }
+                        });
+                    }
                 }
                 else
                 {
@@ -130,6 +148,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             {
                 _logger.LogInformation("New total velocity risk alert {status}", actualTotalStatus.ToJson());
                 await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualTotalStatus);
+                await PublishAssetStatusAsync(PrepareTotalMessage(actualTotalStatus, isAlarmRiskAssets));
             }
         }
 
@@ -177,6 +196,44 @@ namespace Service.Liquidity.Monitoring.Jobs
                 Message = message
             };
         }        
+        
+        // Exposure: Summary Alarm Net hit limit -20000$
+        // Current value: -21000$ 
+        // Assets:
+        // BTC -12000$ [Limit: -6000$]
+        // ETH -7000$ [Limit: -6000$]
+        // ADA -3000$ [Limit: -3000$]
+        // Date: 2022-01-28 10:00:00
+        private AssetPortfolioStatusMessage PrepareTotalMessage(AssetPortfolioStatus actualAssetStatus,
+            List<AssetPortfolioStatus> assetPortfolioStatusList)
+        {
+            var hitAssetsLines = string.Empty;
+            foreach (var asset in assetPortfolioStatusList)
+            {
+                var messageline = ($"{FailUnicode} {asset.Asset} {asset.VelocityRisk.CurrentValue} " +
+                                   $"[Limit: {asset.VelocityRisk.ThresholdValue}]\r\n");
+                hitAssetsLines += messageline;
+            }
+            
+            var message = (actualAssetStatus.VelocityRisk.IsAlarm
+                              ? $"{FailUnicode} Exposure: Summary Alarm Net hit limit: {actualAssetStatus.VelocityRisk.ThresholdValue}\r\n"
+                              : $"{SuccessUnicode} Exposure: Summary Alarm Net back to normal\r\n") +
+                          $"Current value: {actualAssetStatus.VelocityRisk.CurrentValue}\r\n" +
+                          $"Assets: \r\n{hitAssetsLines}" +    
+                          $"Date: {actualAssetStatus.VelocityRisk.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
+
+            _logger.LogInformation("Prepare Summary Alarm Net message: {message}", message);
+            
+            return new AssetPortfolioStatusMessage
+            {
+                Asset = AssetPortfolioSettingsNoSql.TotalSettingsAsset,
+                ThresholdDate = actualAssetStatus.VelocityRisk.ThresholdDate,
+                CurrentValue = actualAssetStatus.VelocityRisk.CurrentValue,
+                ThresholdValue = actualAssetStatus.VelocityRisk.ThresholdValue,
+                IsAlarm = actualAssetStatus.VelocityRisk.IsAlarm,
+                Message = message
+            };
+        }
         
         private AssetPortfolioStatus GetActualStatusByTotal(List<Portfolio.Asset> assetBalances, 
             AssetPortfolioSettings assetSettingsByAsset)
