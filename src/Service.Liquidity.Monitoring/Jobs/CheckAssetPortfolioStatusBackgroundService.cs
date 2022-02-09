@@ -158,9 +158,9 @@ namespace Service.Liquidity.Monitoring.Jobs
         private AssetPortfolioStatusMessage PrepareVelocityMessage(AssetPortfolioStatus actualAssetStatus)
         {
             var message = (actualAssetStatus.Velocity.IsAlarm
-                ? $"{FailUnicode} {actualAssetStatus.Asset} velocity hit limit: {actualAssetStatus.Velocity.ThresholdValue}\r\n"
-                : $"{SuccessUnicode} {actualAssetStatus.Asset} velocity back to normal\r\n") +
-                  $"Current value: {actualAssetStatus.Velocity.CurrentValue}\r\n" +
+                ? $"{FailUnicode} {actualAssetStatus.Asset} <b>velocity</b> hit limit: {actualAssetStatus.Velocity.ThresholdValue}\r\n"
+                : $"{SuccessUnicode} {actualAssetStatus.Asset} <b>velocity</b> back to normal\r\n") +
+                  $"Current value: <b>{actualAssetStatus.Velocity.CurrentValue}</b>\r\n" +
                   $"Date: {actualAssetStatus.Velocity.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
 
             _logger.LogInformation("Prepare velocity message: {message}", message);
@@ -179,9 +179,9 @@ namespace Service.Liquidity.Monitoring.Jobs
         private AssetPortfolioStatusMessage PrepareVelocityRiskMessage(AssetPortfolioStatus actualAssetStatus)
         {
             var message = (actualAssetStatus.VelocityRisk.IsAlarm
-                ? $"{FailUnicode} {actualAssetStatus.Asset} Alarm Net hit limit {actualAssetStatus.VelocityRisk.ThresholdValue}\r\n"
-                : $"{SuccessUnicode} {actualAssetStatus.Asset} Alarm Net back to normal\r\n") +
-                  $"Current value: {actualAssetStatus.VelocityRisk.CurrentValue}\r\n" +
+                ? $"{FailUnicode} {actualAssetStatus.Asset} <b>Alarm Net</b> hit limit {actualAssetStatus.VelocityRisk.ThresholdValue}\r\n"
+                : $"{SuccessUnicode} {actualAssetStatus.Asset} <b>Alarm Net</b> back to normal\r\n") +
+                  $"Current value: <b>{actualAssetStatus.VelocityRisk.CurrentValue}</b>\r\n" +
                   $"Date: {actualAssetStatus.VelocityRisk.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
            
             _logger.LogInformation("Prepare velocity risk message: {message}", message);
@@ -216,9 +216,9 @@ namespace Service.Liquidity.Monitoring.Jobs
             }
             
             var message = (actualAssetStatus.VelocityRisk.IsAlarm
-                              ? $"{FailUnicode} Exposure: Summary Alarm Net hit limit: {actualAssetStatus.VelocityRisk.ThresholdValue}\r\n"
-                              : $"{SuccessUnicode} Exposure: Summary Alarm Net back to normal\r\n") +
-                          $"Current value: {actualAssetStatus.VelocityRisk.CurrentValue}\r\n" +
+                              ? $"{FailUnicode} Exposure: <b>Summary Alarm Net</b> hit limit: {actualAssetStatus.VelocityRisk.ThresholdValue}\r\n"
+                              : $"{SuccessUnicode} Exposure: <b>Summary Alarm Net</b> back to normal\r\n") +
+                          $"Current value: <b>{actualAssetStatus.VelocityRisk.CurrentValue}</b>\r\n" +
                           $"Assets: \r\n{hitAssetsLines}" +    
                           $"Date: {actualAssetStatus.VelocityRisk.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
 
