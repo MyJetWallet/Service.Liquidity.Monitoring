@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
 using MyJetWallet.Sdk.Service.Tools;
 using MyJetWallet.Sdk.ServiceBus;
 using MyNoSqlServer.Abstractions;
 using Newtonsoft.Json;
+using Service.Liquidity.Monitoring.Domain.Extentions;
 using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.TradingPortfolio.Client;
@@ -25,11 +27,8 @@ namespace Service.Liquidity.Monitoring.Jobs
         private readonly IAssetPortfolioStatusStorage _assetPortfolioStatusStorage;
         private readonly MyTaskTimer _operationsTimer;
         private IServiceBusPublisher<AssetPortfolioStatusMessage> _assetPortfolioStatusPublisher;
-#if DEBUG
+
         private const int TimerSpanSec = 30;
-#else
-        private const int TimerSpanSec = 60;
-#endif    
         private const string SuccessUnicode = "👍";
         private const string FailUnicode = "\u2757";        
         public CheckAssetPortfolioStatusBackgroundService(
@@ -110,7 +109,8 @@ namespace Service.Liquidity.Monitoring.Jobs
                         await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
                         await PublishAssetStatusAsync(PrepareVelocityRiskMessage(actualAssetStatus));
                     }
-
+                    
+                    // Create total assets list
                     if (lastAssetStatus.VelocityRisk.IsAlarm)
                     {
                         isAlarmRiskAssets.Add(new AssetPortfolioStatus
@@ -133,22 +133,78 @@ namespace Service.Liquidity.Monitoring.Jobs
                     await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
                 }
             }
+            await CheckTotalStatus(assets, isAlarmRiskAssets);
+            await CheckTotalNegativeInUsdStatus(portfolio);
+            await CheckTotalNegativeInPercentStatus(portfolio);
+        }
+
+        private async Task CheckTotalStatus(Dictionary<string, Portfolio.Asset> assets, List<AssetPortfolioStatus> isAlarmRiskAssets)
+        {
             // Check Total
-            var assetSettingsByTotal = await _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
+            var assetSettingsByTotal =
+                await _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(AssetPortfolioSettingsNoSql
+                    .TotalSettingsAsset);
             if (assetSettingsByTotal == null)
             {
                 _logger.LogError($"Total settings not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
             }
 
-            var lastTotalStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
+            var lastTotalStatus =
+                _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
             var actualTotalStatus = GetActualStatusByTotal(assets.Values.ToList(), assetSettingsByTotal);
 
-            if (lastTotalStatus == null || 
+            if (lastTotalStatus == null ||
                 lastTotalStatus.VelocityRisk.IsAlarm != actualTotalStatus.VelocityRisk.IsAlarm)
             {
                 _logger.LogInformation("New total velocity risk alert {status}", actualTotalStatus.ToJson());
                 await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualTotalStatus);
                 await PublishAssetStatusAsync(PrepareTotalMessage(actualTotalStatus, isAlarmRiskAssets));
+            }
+        }
+        
+        private async Task CheckTotalNegativeInUsdStatus(Portfolio portfolio)
+        {
+            var name = AssetPortfolioSettingsNoSql.TotalNegativeInUsdSettingsAsset;
+            var limitSettings =
+                (await _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(name))?.TotalNegativeBalanceInUsdMin;
+            
+            if (limitSettings == null)
+            {
+                _logger.LogError($"Total negative $ settings not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
+            }
+
+            var lastTotalStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(name);
+            var actualTotalStatus = GetActualStatusByTotalNegativeInUsd(portfolio.TotalNegativeNetInUsd, limitSettings ?? 0m);
+
+            if (lastTotalStatus == null ||
+                lastTotalStatus.NegativePositionInUSd.IsAlarm != actualTotalStatus.NegativePositionInUSd.IsAlarm)
+            {
+                _logger.LogInformation("New total negative $ risk alert {status}", actualTotalStatus.ToJson());
+                await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualTotalStatus);
+                await PublishAssetStatusAsync(PrepareTotalNegativeInUsdMessage(actualTotalStatus.NegativePositionInUSd,  name));
+            }
+        }
+        
+        private async Task CheckTotalNegativeInPercentStatus(Portfolio portfolio)
+        {
+            var name = AssetPortfolioSettingsNoSql.TotalNegativeInPercentSettingsAsset;
+            var limitSettings =
+                (await _assetPortfolioSettingsStorage.GetAssetPortfolioSettingsByAsset(name))?.TotalNegativeBalanceInPercent;
+            
+            if (limitSettings == null)
+            {
+                _logger.LogError($"Total negative % settings not found in {AssetPortfolioSettingsNoSql.TableName}!!!");
+            }
+
+            var lastTotalStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(name);
+            var actualTotalStatus = GetActualStatusByTotalNegativeInPercent(portfolio.TotalNegativeNetPercent, limitSettings ?? 0m);
+
+            if (lastTotalStatus == null ||
+                lastTotalStatus.NegativePositionInPercent.IsAlarm != actualTotalStatus.NegativePositionInPercent.IsAlarm)
+            {
+                _logger.LogInformation("New total negative % risk alert {status}", actualTotalStatus.ToJson());
+                await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualTotalStatus);
+                await PublishAssetStatusAsync(PrepareTotalNegativeInPercentMessage(actualTotalStatus.NegativePositionInPercent,  name));
             }
         }
 
@@ -164,16 +220,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                   $"Date: {actualAssetStatus.Velocity.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
 
             _logger.LogInformation("Prepare velocity message: {message}", message);
-            
-            return new AssetPortfolioStatusMessage
-            {
-                Asset = actualAssetStatus.Asset,
-                ThresholdDate = actualAssetStatus.Velocity.ThresholdDate,
-                CurrentValue = actualAssetStatus.Velocity.CurrentValue,
-                ThresholdValue = actualAssetStatus.Velocity.ThresholdValue,
-                IsAlarm = actualAssetStatus.Velocity.IsAlarm,
-                Message = message
-            };
+            return actualAssetStatus.Velocity.PrepareMessage(actualAssetStatus.Asset, message);
         }
 
         private AssetPortfolioStatusMessage PrepareVelocityRiskMessage(AssetPortfolioStatus actualAssetStatus)
@@ -185,16 +232,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                   $"Date: {actualAssetStatus.VelocityRisk.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
            
             _logger.LogInformation("Prepare velocity risk message: {message}", message);
-            
-            return new AssetPortfolioStatusMessage
-            {
-                Asset = actualAssetStatus.Asset,
-                ThresholdDate = actualAssetStatus.VelocityRisk.ThresholdDate,
-                CurrentValue = actualAssetStatus.VelocityRisk.CurrentValue,
-                ThresholdValue = actualAssetStatus.VelocityRisk.ThresholdValue,
-                IsAlarm = actualAssetStatus.VelocityRisk.IsAlarm,
-                Message = message
-            };
+            return actualAssetStatus.VelocityRisk.PrepareMessage(actualAssetStatus.Asset, message);
         }        
         
         // Exposure: Summary Alarm Net hit limit -20000$
@@ -223,17 +261,32 @@ namespace Service.Liquidity.Monitoring.Jobs
                           $"Date: {actualAssetStatus.VelocityRisk.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
 
             _logger.LogInformation("Prepare Summary Alarm Net message: {message}", message);
-            
-            return new AssetPortfolioStatusMessage
-            {
-                Asset = AssetPortfolioSettingsNoSql.TotalSettingsAsset,
-                ThresholdDate = actualAssetStatus.VelocityRisk.ThresholdDate,
-                CurrentValue = actualAssetStatus.VelocityRisk.CurrentValue,
-                ThresholdValue = actualAssetStatus.VelocityRisk.ThresholdValue,
-                IsAlarm = actualAssetStatus.VelocityRisk.IsAlarm,
-                Message = message
-            };
+            return actualAssetStatus.VelocityRisk.PrepareMessage(AssetPortfolioSettingsNoSql.TotalSettingsAsset, message);
         }
+        
+        private AssetPortfolioStatusMessage PrepareTotalNegativeInUsdMessage(Status actualAssetStatus, string asset)
+        {
+            var message = (actualAssetStatus.IsAlarm
+                              ? $"{FailUnicode} <b>Negative position $</b> hit limit {actualAssetStatus.ThresholdValue}\r\n"
+                              : $"{SuccessUnicode} <b>Negative position $</b> back to normal\r\n") +
+                          $"Current value: <b>{actualAssetStatus.CurrentValue}</b>\r\n" +
+                          $"Date: {actualAssetStatus.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
+           
+            _logger.LogInformation("Prepare negative position $ message: {message}", message);
+            return actualAssetStatus.PrepareMessage(asset, message);
+        } 
+        
+        private AssetPortfolioStatusMessage PrepareTotalNegativeInPercentMessage(Status actualAssetStatus, string asset)
+        {
+            var message = (actualAssetStatus.IsAlarm
+                              ? $"{FailUnicode} <b>Negative position %</b> hit limit {actualAssetStatus.ThresholdValue}\r\n"
+                              : $"{SuccessUnicode} <b>Negative position %</b> back to normal\r\n") +
+                          $"Current value: <b>{actualAssetStatus.CurrentValue}</b>\r\n" +
+                          $"Date: {actualAssetStatus.ThresholdDate.ToString("yyyy-MM-dd hh:mm:ss")}";
+           
+            _logger.LogInformation("Prepare negative position % message: {message}", message);
+            return actualAssetStatus.PrepareMessage(asset, message);
+        } 
         
         private AssetPortfolioStatus GetActualStatusByTotal(List<Portfolio.Asset> assetBalances, 
             AssetPortfolioSettings assetSettingsByAsset)
@@ -243,12 +296,36 @@ namespace Service.Liquidity.Monitoring.Jobs
             var actualStatus = new AssetPortfolioStatus()
             {
                 Asset = AssetPortfolioSettingsNoSql.TotalSettingsAsset,
-                VelocityRisk = ThresholdTotalVelocityRisk(totalVelocityRiskInUsd, 
+                VelocityRisk = ThresholdMin(totalVelocityRiskInUsd, 
                     assetSettingsByAsset.VelocityRiskUsdMin)
             };
             return actualStatus;
         }
-
+        
+        private AssetPortfolioStatus GetActualStatusByTotalNegativeInUsd(decimal currentValue, 
+            decimal thresholdValue)
+        {
+            var actualStatus = new AssetPortfolioStatus()
+            {
+                Asset = AssetPortfolioSettingsNoSql.TotalNegativeInUsdSettingsAsset,
+                NegativePositionInUSd = ThresholdMin(currentValue, 
+                    thresholdValue)
+            };
+            return actualStatus;
+        }
+        
+        private AssetPortfolioStatus GetActualStatusByTotalNegativeInPercent(decimal currentValue, 
+            decimal thresholdValue)
+        {
+            var actualStatus = new AssetPortfolioStatus()
+            {
+                Asset = AssetPortfolioSettingsNoSql.TotalNegativeInPercentSettingsAsset,
+                NegativePositionInPercent = ThresholdMax(currentValue, 
+                    thresholdValue)
+            };
+            return actualStatus;
+        }        
+        
         private AssetPortfolioStatus GetActualStatusByAsset(Portfolio.Asset asset, 
             AssetPortfolioSettings assetSettingsByAsset)
         {
@@ -259,7 +336,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             var velocityStatus =  ThresholdVelocity(Math.Round(asset.DailyVelocity, 2), Math.Round(assetSettingsByAsset.VelocityMin, 2), 
                 Math.Round(assetSettingsByAsset.VelocityMax, 2));
             
-            var velocityRiskStatus =  ThresholdVelocityRisk(Math.Round(asset.DailyVelocityRiskInUsd, 2),
+            var velocityRiskStatus =  ThresholdMin(Math.Round(asset.DailyVelocityRiskInUsd, 2),
                 Math.Round(assetSettingsByAsset.VelocityRiskUsdMin, 2));
             
             var actualStatus = new AssetPortfolioStatus()
@@ -305,47 +382,25 @@ namespace Service.Liquidity.Monitoring.Jobs
             };
         }
 
-        public static Status ThresholdVelocityRisk(decimal value, decimal min)
+        public static Status ThresholdMin(decimal value, decimal min)
         {
-            if (value <= min)
-            {
-                return new Status
-                {
-                    ThresholdDate = DateTime.UtcNow,
-                    CurrentValue = value,
-                    ThresholdValue = min,
-                    IsAlarm = true
-                };
-            }
-            
             return new Status
             {
                 ThresholdDate = DateTime.UtcNow,
                 CurrentValue = value,
                 ThresholdValue = min,
-                IsAlarm = false
+                IsAlarm = value <= min
             };
         }        
         
-        public static Status ThresholdTotalVelocityRisk(decimal value, decimal min)
+        public static Status ThresholdMax(decimal value, decimal max)
         {
-            if (value <= min)
-            {
-                return new Status
-                {
-                    ThresholdDate = DateTime.UtcNow,
-                    CurrentValue = value,
-                    ThresholdValue = min,
-                    IsAlarm = true
-                };
-            }
-            
             return new Status
             {
                 ThresholdDate = DateTime.UtcNow,
                 CurrentValue = value,
-                ThresholdValue = min,
-                IsAlarm = false
+                ThresholdValue = max,
+                IsAlarm = value >= max
             };
         }
         

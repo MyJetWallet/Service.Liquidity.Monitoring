@@ -84,6 +84,27 @@ namespace Service.Liquidity.Monitoring.Services
                 };
                 await UpdateAssetPortfolioSettingsAsync(totalSettings);
             }
+            
+            if (!settings.Select(e => e.PartitionKey).Contains(AssetPortfolioSettingsNoSql.TotalNegativeInUsdSettingsAsset))
+            {
+                var totalSettings = new AssetPortfolioSettings
+                {
+                    Asset = AssetPortfolioSettingsNoSql.TotalNegativeInUsdSettingsAsset,
+                    TotalNegativeBalanceInUsdMin = -2000m
+                };
+                await UpdateAssetPortfolioSettingsAsync(totalSettings);
+            }
+
+            if (!settings.Select(e => e.PartitionKey).Contains(AssetPortfolioSettingsNoSql.TotalNegativeInPercentSettingsAsset))
+            {
+                var totalSettings = new AssetPortfolioSettings
+                {
+                    Asset = AssetPortfolioSettingsNoSql.TotalNegativeInPercentSettingsAsset,
+                    TotalNegativeBalanceInUsdMin = 5m
+                };
+                await UpdateAssetPortfolioSettingsAsync(totalSettings);
+            }            
+            
         }
 
         public void Start()

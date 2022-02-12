@@ -26,7 +26,7 @@ namespace Service.Liquidity.Monitoring.Tests
         [TestCase(5000, -5000,  false)]
         public void ThresholdTotalVelocityRisk(decimal currValue, decimal min, bool result)
         {
-            var strike = CheckAssetPortfolioStatusBackgroundService.ThresholdVelocityRisk(currValue, min);
+            var strike = CheckAssetPortfolioStatusBackgroundService.ThresholdMin(currValue, min);
             Assert.AreEqual(result, strike.IsAlarm);
         }
     }

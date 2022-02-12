@@ -19,5 +19,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models
         [DataMember(Order = 1)] public string Asset { get; set; }
         [DataMember(Order = 2)] public Status Velocity { get; set; }
         [DataMember(Order = 3)] public Status VelocityRisk { get; set; }
+        [DataMember(Order = 4)] public Status NegativePositionInUSd { get; set; }
+        [DataMember(Order = 5)] public Status NegativePositionInPercent { get; set; }
     }
 }

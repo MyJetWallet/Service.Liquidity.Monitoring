@@ -10,5 +10,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models
         [DataMember(Order = 2)] public decimal VelocityMin { get; set; }
         [DataMember(Order = 3)] public decimal VelocityMax { get; set; }
         [DataMember(Order = 4)] public decimal VelocityRiskUsdMin { get; set; }
+        [DataMember(Order = 5)] public decimal TotalNegativeBalanceInUsdMin { get; set; }
+        [DataMember(Order = 6)] public decimal TotalNegativeBalanceInPercent { get; set; }
     }
 }
