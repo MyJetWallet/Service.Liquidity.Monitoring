@@ -28,7 +28,8 @@ namespace Service.Liquidity.Monitoring.Jobs
         private readonly MyTaskTimer _operationsTimer;
         private IServiceBusPublisher<AssetPortfolioStatusMessage> _assetPortfolioStatusPublisher;
 
-        private const int TimerSpanSec = 30;
+        private static readonly TimeSpan DefaultMonitorTimer = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan DefaultLastAlarmEventTimeSpan = TimeSpan.FromMinutes(60);
         private const string SuccessUnicode = "👍";
         private const string FailUnicode = "\u2757";        
         public CheckAssetPortfolioStatusBackgroundService(
@@ -44,7 +45,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             _assetPortfolioStatusStorage = assetPortfolioStatusStorage;
             _assetPortfolioStatusPublisher = assetPortfolioStatusPublisher;
             _operationsTimer = new MyTaskTimer(nameof(CheckAssetPortfolioStatusBackgroundService), 
-                TimeSpan.FromSeconds(TimerSpanSec), logger, Process);
+                DefaultMonitorTimer, logger, Process);
         }
 
         public void Start()
@@ -96,14 +97,14 @@ namespace Service.Liquidity.Monitoring.Jobs
                 
                 if (lastAssetStatus != null)
                 {
-                    if (lastAssetStatus.Velocity.IsAlarm != actualAssetStatus.Velocity.IsAlarm)
+                    if (IsStatusChanged(lastAssetStatus.Velocity, actualAssetStatus.Velocity))
                     {
                         _logger.LogInformation("New velocity alert {status}", actualAssetStatus.ToJson());
                         await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
                         await PublishAssetStatusAsync(PrepareVelocityMessage(actualAssetStatus));
                     }
                 
-                    if(lastAssetStatus.VelocityRisk.IsAlarm != actualAssetStatus.VelocityRisk.IsAlarm)
+                    if(IsStatusChanged(lastAssetStatus.VelocityRisk, actualAssetStatus.VelocityRisk))
                     {
                         _logger.LogInformation("New velocity risk alert {status}", actualAssetStatus.ToJson());
                         await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualAssetStatus);
@@ -153,8 +154,8 @@ namespace Service.Liquidity.Monitoring.Jobs
                 _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(AssetPortfolioSettingsNoSql.TotalSettingsAsset);
             var actualTotalStatus = GetActualStatusByTotal(assets.Values.ToList(), assetSettingsByTotal);
 
-            if (lastTotalStatus == null ||
-                lastTotalStatus.VelocityRisk.IsAlarm != actualTotalStatus.VelocityRisk.IsAlarm)
+            if (lastTotalStatus == null || 
+                IsStatusChanged(lastTotalStatus.VelocityRisk, actualTotalStatus.VelocityRisk))
             {
                 _logger.LogInformation("New total velocity risk alert {status}", actualTotalStatus.ToJson());
                 await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualTotalStatus);
@@ -177,7 +178,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             var actualTotalStatus = GetActualStatusByTotalNegativeInUsd(portfolio.TotalNegativeNetInUsd, limitSettings ?? 0m);
 
             if (lastTotalStatus == null ||
-                lastTotalStatus.NegativePositionInUSd.IsAlarm != actualTotalStatus.NegativePositionInUSd.IsAlarm)
+                IsStatusChanged(lastTotalStatus.NegativePositionInUSd, actualTotalStatus.NegativePositionInUSd))
             {
                 _logger.LogInformation("New total negative $ risk alert {status}", actualTotalStatus.ToJson());
                 await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualTotalStatus);
@@ -200,7 +201,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             var actualTotalStatus = GetActualStatusByTotalNegativeInPercent(portfolio.TotalNegativeNetPercent, limitSettings ?? 0m);
 
             if (lastTotalStatus == null ||
-                lastTotalStatus.NegativePositionInPercent.IsAlarm != actualTotalStatus.NegativePositionInPercent.IsAlarm)
+                IsStatusChanged(lastTotalStatus.NegativePositionInPercent, actualTotalStatus.NegativePositionInPercent))
             {
                 _logger.LogInformation("New total negative % risk alert {status}", actualTotalStatus.ToJson());
                 await _assetPortfolioStatusStorage.UpdateAssetPortfolioStatusAsync(actualTotalStatus);
@@ -408,6 +409,17 @@ namespace Service.Liquidity.Monitoring.Jobs
         {
             await _assetPortfolioStatusPublisher.PublishAsync(message);
         }
-    }
 
+        public static bool IsStatusChanged(Status last, Status actual)
+        {
+            var isStatusChanged = last.IsAlarm != actual.IsAlarm;
+            var isStatusStillAlarm = last.IsAlarm && 
+                                     actual.IsAlarm &&
+                                     (DateTime.UtcNow - last.ThresholdDate > DefaultLastAlarmEventTimeSpan);
+            
+            return (isStatusChanged || isStatusStillAlarm);
+        }
+    }
+    
+    
 }
