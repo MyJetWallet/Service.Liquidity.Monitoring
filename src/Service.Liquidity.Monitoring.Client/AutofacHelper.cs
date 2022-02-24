@@ -9,13 +9,24 @@ namespace Service.Liquidity.Monitoring.Client
     {
         public static void MonitoringClient(this ContainerBuilder builder, string grpcServiceUrl)
         {
-            var factory = new MonitoringClientFactory(grpcServiceUrl);
         }
         
         public static void RegisterAssetPortfolioSettingsClient(this ContainerBuilder builder, string grpcServiceUrl)
         {
             var factory = new MonitoringClientFactory(grpcServiceUrl);
             builder.RegisterInstance(factory.GetAssetPortfolioSettingsService()).As<IAssetPortfolioSettingsManager>().SingleInstance();
+        }
+        
+        public static void RegisterPortfolioChecksClient(this ContainerBuilder builder, string grpcServiceUrl)
+        {
+            var factory = new MonitoringClientFactory(grpcServiceUrl);
+            builder.RegisterInstance(factory.GetPortfolioChecksManager()).As<IPortfolioChecksManager>().SingleInstance();
+        }
+        
+        public static void RegisterMonitoringRuleSetsClient(this ContainerBuilder builder, string grpcServiceUrl)
+        {
+            var factory = new MonitoringClientFactory(grpcServiceUrl);
+            builder.RegisterInstance(factory.GetMonitoringRuleSetsManager()).As<IMonitoringRuleSetsManager>().SingleInstance();
         }
     }
 }

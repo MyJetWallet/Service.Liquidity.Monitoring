@@ -1,0 +1,53 @@
+using MyNoSqlServer.Abstractions;
+using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
+using Service.Liquidity.Monitoring.Domain.Services;
+
+namespace Service.Liquidity.Monitoring.NoSql.RuleSets
+{
+    public class MonitoringRuleSetsNoSqlStorage : IMonitoringRuleSetsStorage
+    {
+        private readonly IMyNoSqlServerDataWriter<MonitoringRuleSetNoSql> _myNoSqlServerDataWriter;
+
+        public MonitoringRuleSetsNoSqlStorage(
+            IMyNoSqlServerDataWriter<MonitoringRuleSetNoSql> myNoSqlServerDataWriter
+        )
+        {
+            _myNoSqlServerDataWriter = myNoSqlServerDataWriter;
+        }
+
+        public async Task AddOrUpdateAsync(MonitoringRuleSet model)
+        {
+            var nosqlModel = MonitoringRuleSetNoSql.Create(model);
+            await _myNoSqlServerDataWriter.InsertOrReplaceAsync(nosqlModel);
+        }
+
+        public async Task<IEnumerable<MonitoringRuleSet>> GetAsync()
+        {
+            var models = await _myNoSqlServerDataWriter.GetAsync();
+
+            return models.Select(ToDomain);
+        }
+
+        public async Task<MonitoringRuleSet> GetAsync(string id)
+        {
+            var model = await _myNoSqlServerDataWriter.GetAsync(MonitoringRuleSetNoSql.GeneratePartitionKey(),
+                MonitoringRuleSetNoSql.GenerateRowKey(id));
+
+            return ToDomain(model);
+        }
+
+        public async Task DeleteAsync(string id)
+        {
+            await _myNoSqlServerDataWriter.DeleteAsync(MonitoringRuleSetNoSql.GeneratePartitionKey(),
+                MonitoringRuleSetNoSql.GenerateRowKey(id));
+        }
+
+        private MonitoringRuleSet ToDomain(MonitoringRuleSetNoSql src)
+        {
+            return new MonitoringRuleSet
+            {
+                // map
+            };
+        }
+    }
+}
