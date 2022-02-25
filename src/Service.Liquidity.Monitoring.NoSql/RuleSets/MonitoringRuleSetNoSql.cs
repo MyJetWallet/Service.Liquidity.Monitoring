@@ -10,8 +10,7 @@ namespace Service.Liquidity.Monitoring.NoSql.RuleSets
         public static string GeneratePartitionKey() => "*";
         public static string GenerateRowKey(string id) => id;
 
-        public string Name { get; set; }
-        public IEnumerable<MonitoringRule> Rules { get; set; }
+        public MonitoringRuleSet Value { get; set; }
 
         public static MonitoringRuleSetNoSql Create(MonitoringRuleSet src)
         {
@@ -19,8 +18,7 @@ namespace Service.Liquidity.Monitoring.NoSql.RuleSets
             {
                 PartitionKey = GeneratePartitionKey(),
                 RowKey = GenerateRowKey(src.Id),
-                Name = src.Name,
-                Rules = src.Rules
+                Value = src
             };
         }
     }

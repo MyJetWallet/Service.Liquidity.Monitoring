@@ -46,8 +46,8 @@ namespace Service.Liquidity.Monitoring.Modules
                 .SingleInstance()
                 .AutoActivate()
                 .AsSelf();
-            builder.RegisterType<PortfolioCheckStrategyFactory>()
-                .As<IPortfolioCheckStrategyFactory>()
+            builder.RegisterType<PortfolioMetricFactory>()
+                .As<IPortfolioMetricFactory>()
                 .SingleInstance()
                 .AutoActivate()
                 .AsSelf();

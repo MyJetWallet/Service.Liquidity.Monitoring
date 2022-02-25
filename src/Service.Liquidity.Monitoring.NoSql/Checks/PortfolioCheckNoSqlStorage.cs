@@ -7,17 +7,14 @@ namespace Service.Liquidity.Monitoring.NoSql.Checks
     public class PortfolioCheckNoSqlStorage : IPortfolioCheckStorage
     {
         private readonly IMyNoSqlServerDataWriter<PortfolioCheckNoSql> _myNoSqlServerDataWriter;
-        private readonly IPortfolioCheckStrategyFactory _checkStrategyFactory;
 
         public PortfolioCheckNoSqlStorage(
-            IMyNoSqlServerDataWriter<PortfolioCheckNoSql> myNoSqlServerDataWriter,
-            IPortfolioCheckStrategyFactory checkStrategyFactory
+            IMyNoSqlServerDataWriter<PortfolioCheckNoSql> myNoSqlServerDataWriter
         )
         {
             _myNoSqlServerDataWriter = myNoSqlServerDataWriter;
-            _checkStrategyFactory = checkStrategyFactory;
         }
-        
+
         public async Task AddOrUpdateAsync(PortfolioCheck model)
         {
             var nosqlModel = PortfolioCheckNoSql.Create(model);
@@ -28,7 +25,7 @@ namespace Service.Liquidity.Monitoring.NoSql.Checks
         {
             var models = await _myNoSqlServerDataWriter.GetAsync();
 
-            return models.Select(ToDomain);
+            return models.Select(m => m.Value);
         }
 
         public async Task<PortfolioCheck> GetAsync(string id)
@@ -36,20 +33,13 @@ namespace Service.Liquidity.Monitoring.NoSql.Checks
             var model = await _myNoSqlServerDataWriter.GetAsync(PortfolioCheckNoSql.GeneratePartitionKey(),
                 PortfolioCheckNoSql.GenerateRowKey(id));
 
-            return ToDomain(model);
+            return model.Value;
         }
 
         public async Task DeleteAsync(string id)
         {
             await _myNoSqlServerDataWriter.DeleteAsync(PortfolioCheckNoSql.GeneratePartitionKey(),
                 PortfolioCheckNoSql.GenerateRowKey(id));
-        }
-
-        private PortfolioCheck ToDomain(PortfolioCheckNoSql src)
-        {
-            var checkStrategy = _checkStrategyFactory.Get(src.StrategyType);
-
-            return new PortfolioCheck(checkStrategy);
         }
     }
 }

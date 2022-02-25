@@ -25,7 +25,7 @@ namespace Service.Liquidity.Monitoring.NoSql.RuleSets
         {
             var models = await _myNoSqlServerDataWriter.GetAsync();
 
-            return models.Select(ToDomain);
+            return models.Select(m => m.Value);
         }
 
         public async Task<MonitoringRuleSet> GetAsync(string id)
@@ -33,21 +33,13 @@ namespace Service.Liquidity.Monitoring.NoSql.RuleSets
             var model = await _myNoSqlServerDataWriter.GetAsync(MonitoringRuleSetNoSql.GeneratePartitionKey(),
                 MonitoringRuleSetNoSql.GenerateRowKey(id));
 
-            return ToDomain(model);
+            return model.Value;
         }
 
         public async Task DeleteAsync(string id)
         {
             await _myNoSqlServerDataWriter.DeleteAsync(MonitoringRuleSetNoSql.GeneratePartitionKey(),
                 MonitoringRuleSetNoSql.GenerateRowKey(id));
-        }
-
-        private MonitoringRuleSet ToDomain(MonitoringRuleSetNoSql src)
-        {
-            return new MonitoringRuleSet
-            {
-                // map
-            };
         }
     }
 }

@@ -1,6 +1,6 @@
-namespace Service.Liquidity.Monitoring.Domain.Models.Checks.Strategies
+namespace Service.Liquidity.Monitoring.Domain.Models.Metrics.Common
 {
-    public enum PortfolioCheckStrategyType
+    public enum PortfolioMetricType
     {
         CollatAmount,
         CollatDollar,

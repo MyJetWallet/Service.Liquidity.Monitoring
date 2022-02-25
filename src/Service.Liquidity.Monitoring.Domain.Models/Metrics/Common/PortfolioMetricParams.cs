@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 
-namespace Service.Liquidity.Monitoring.Domain.Models.Checks.Strategies
+namespace Service.Liquidity.Monitoring.Domain.Models.Metrics.Common
 {
-    public class PortfolioCheckStrategyParams
+    public class PortfolioMetricParams
     {
         public IEnumerable<string> AssetSymbols { get; set; }
         public IEnumerable<string> CompareAssetSymbols { get; set; }
-        public decimal TargetValue { get; set; }
     }
 }
