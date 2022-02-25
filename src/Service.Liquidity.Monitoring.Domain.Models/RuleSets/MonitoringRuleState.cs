@@ -8,6 +8,8 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
     {
         [DataMember(Order = 1)] public DateTime Date { get; set; }
         [DataMember(Order = 2)] public bool IsActive { get; set; }
+        
+        public MonitoringRuleState() {}
 
         public MonitoringRuleState(bool isActive)
         {

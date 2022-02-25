@@ -8,6 +8,8 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
     {
         [DataMember(Order = 1)] public DateTime Date { get; set; }
         [DataMember(Order = 2)] public bool IsActive { get; set; }
+        
+        public PortfolioCheckState() {}
 
         public PortfolioCheckState(bool isActive)
         {
