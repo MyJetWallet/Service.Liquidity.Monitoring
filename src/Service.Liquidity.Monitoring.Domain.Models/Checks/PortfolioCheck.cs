@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using Service.Liquidity.Monitoring.Domain.Models.Checks.Operators;
 using Service.Liquidity.Monitoring.Domain.Models.Metrics.Common;
+using Service.Liquidity.Monitoring.Domain.Models.Operators;
 using Service.Liquidity.TradingPortfolio.Domain.Models;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.Checks
@@ -16,7 +16,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
         [DataMember(Order = 4)] public List<string> CompareAssetSymbols { get; set; }
         [DataMember(Order = 5)] public decimal TargetValue { get; set; }
         [DataMember(Order = 6)] public PortfolioMetricType MetricType { get; set; }
-        [DataMember(Order = 7)] public CheckOperatorType OperatorType { get; set; }
+        [DataMember(Order = 7)] public CompareOperatorType OperatorType { get; set; }
         [DataMember(Order = 8)] public PortfolioCheckState CurrentState { get; set; }
         [DataMember(Order = 9)] public PortfolioCheckState PrevState { get; set; }
 
@@ -34,8 +34,8 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
             };
 
             var metricResult = metric.Calculate(portfolio, metricParams);
-            var checkOperator = new CheckOperator(OperatorType);
-            var result = checkOperator.Compare(metricResult, TargetValue);
+            var compareOperator = new CompareOperator(OperatorType);
+            var result = compareOperator.Compare(metricResult, TargetValue);
             PrevState = CurrentState;
             CurrentState = new PortfolioCheckState(result);
 

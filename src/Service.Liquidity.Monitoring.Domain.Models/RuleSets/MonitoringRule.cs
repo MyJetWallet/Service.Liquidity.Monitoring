@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
 using Service.Liquidity.Monitoring.Domain.Models.Metrics;
 using Service.Liquidity.Monitoring.Domain.Models.Metrics.Common;
+using Service.Liquidity.Monitoring.Domain.Models.Operators;
 using Service.Liquidity.TradingPortfolio.Domain.Models;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
@@ -14,7 +15,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
     {
         [DataMember(Order = 1)] public string Name { get; set; }
         [DataMember(Order = 2)] public List<string> CheckIds { get; set; }
-        [DataMember(Order = 3)] public ConcatenationType ConcatenationType { get; set; }
+        [DataMember(Order = 3)] public LogicalOperatorType LogicalOperatorType { get; set; }
         [DataMember(Order = 4)] public string NotificationChannel { get; set; }
         [DataMember(Order = 5)] public MonitoringRuleAction MonitoringRuleAction { get; set; }
         [DataMember(Order = 6)] public MonitoringRuleState PrevState { get; set; }
@@ -33,9 +34,9 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
                 throw new Exception("Some of checks Not Found");
             }
 
-            switch (ConcatenationType)
+            switch (LogicalOperatorType)
             {
-                case ConcatenationType.All:
+                case LogicalOperatorType.All:
                 {
                     var result = ruleChecks.All(ch => ch.Matches(portfolio, metrics));
                     PrevState = CurrentState;
@@ -43,7 +44,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 
                     return result;
                 }
-                case ConcatenationType.Any:
+                case LogicalOperatorType.Any:
                 {
                     var result = ruleChecks.Any(ch => ch.Matches(portfolio, metrics));
                     PrevState = CurrentState;
@@ -51,7 +52,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 
                     return result;
                 }
-                default: throw new NotSupportedException($"{nameof(ConcatenationType)}");
+                default: throw new NotSupportedException($"{nameof(LogicalOperatorType)}");
             }
         }
     }
