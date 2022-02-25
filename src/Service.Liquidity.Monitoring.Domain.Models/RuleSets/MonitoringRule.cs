@@ -14,7 +14,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
     public class MonitoringRule
     {
         [DataMember(Order = 1)] public string Name { get; set; }
-        [DataMember(Order = 2)] public List<string> CheckIds { get; set; }
+        [DataMember(Order = 2)] public IEnumerable<string> CheckIds { get; set; }
         [DataMember(Order = 3)] public LogicalOperatorType LogicalOperatorType { get; set; }
         [DataMember(Order = 4)] public string NotificationChannel { get; set; }
         [DataMember(Order = 5)] public MonitoringRuleAction MonitoringRuleAction { get; set; }
@@ -25,11 +25,12 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
             IEnumerable<PortfolioCheck> checks,
             Dictionary<PortfolioMetricType, IPortfolioMetric> metrics)
         {
+            var hashSet = CheckIds.ToHashSet();
             var ruleChecks = checks
-                .Where(ch => CheckIds.Contains(ch.Id))
+                .Where(ch => hashSet.Contains(ch.Id))
                 .ToList();
 
-            if (ruleChecks.Count != CheckIds.Count)
+            if (ruleChecks.Count != hashSet.Count)
             {
                 throw new Exception("Some of checks Not Found");
             }

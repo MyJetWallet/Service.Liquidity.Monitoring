@@ -12,8 +12,8 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
     {
         [DataMember(Order = 1)] public string Id { get; set; }
         [DataMember(Order = 2)] public string Name { get; set; }
-        [DataMember(Order = 3)] public List<string> AssetSymbols { get; set; }
-        [DataMember(Order = 4)] public List<string> CompareAssetSymbols { get; set; }
+        [DataMember(Order = 3)] public IEnumerable<string> AssetSymbols { get; set; }
+        [DataMember(Order = 4)] public IEnumerable<string> CompareAssetSymbols { get; set; }
         [DataMember(Order = 5)] public decimal TargetValue { get; set; }
         [DataMember(Order = 6)] public PortfolioMetricType MetricType { get; set; }
         [DataMember(Order = 7)] public CompareOperatorType OperatorType { get; set; }
