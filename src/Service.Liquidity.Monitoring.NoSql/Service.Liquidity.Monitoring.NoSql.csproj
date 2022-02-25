@@ -7,10 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="MyNoSqlServer.DataWriter" Version="1.6.1" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\Service.Liquidity.Monitoring.Domain.Models\Service.Liquidity.Monitoring.Domain.Models.csproj" />
       <ProjectReference Include="..\Service.Liquidity.Monitoring.Domain\Service.Liquidity.Monitoring.Domain.csproj" />
     </ItemGroup>
