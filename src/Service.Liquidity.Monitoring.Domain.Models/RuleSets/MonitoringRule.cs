@@ -20,6 +20,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 5)] public MonitoringRuleAction MonitoringRuleAction { get; set; }
         [DataMember(Order = 6)] public MonitoringRuleState PrevState { get; set; }
         [DataMember(Order = 7)] public MonitoringRuleState CurrentState { get; set; }
+        [DataMember(Order = 8)] public string Id { get; set; }
 
         public bool Matches(Portfolio portfolio,
             IEnumerable<PortfolioCheck> checks,
