@@ -10,14 +10,14 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Metrics
 
         public decimal Calculate(Portfolio portfolio, PortfolioMetricParams portfolioMetricParams)
         {
-            var assetCollateralPercent = portfolio.Assets
+            var assetsValue = portfolio.Assets
                 .Where(a => portfolioMetricParams.AssetSymbols.Contains(a.Key))
                 .Sum(x => x.Value.DailyVelocityRiskInUsd);
-            var compareAssetCollateralPercent = portfolio.Assets
+            var compareAssetsValue = portfolio.Assets
                 .Where(a => portfolioMetricParams.CompareAssetSymbols.Contains(a.Key))
                 .Sum(x => x.Value.DailyVelocityRiskInUsd);
                     
-            return assetCollateralPercent - compareAssetCollateralPercent;
+            return assetsValue - compareAssetsValue;
         }
     }
 }
