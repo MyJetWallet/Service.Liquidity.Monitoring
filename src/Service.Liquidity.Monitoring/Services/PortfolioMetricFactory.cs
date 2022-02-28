@@ -11,7 +11,7 @@ namespace Service.Liquidity.Monitoring.Services
         {
             switch (type)
             {
-                case PortfolioMetricType.CollatAmount: return new CollatAmountPortfolioMetric();
+                case PortfolioMetricType.CollateralAmount: return new CollateralAmountPortfolioMetric();
                 default: throw new NotSupportedException($"{type.ToString()}");
             }
         }

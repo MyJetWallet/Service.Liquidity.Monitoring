@@ -2,8 +2,8 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Metrics.Common
 {
     public enum PortfolioMetricType
     {
-        CollatAmount,
-        CollatDollar,
+        CollateralAmount,
+        CollateralDollar,
         VelocityDollar,
         VelocityPercent,
         PnlDollar,

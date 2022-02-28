@@ -2,7 +2,7 @@ using System;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.Operators
 {
-    public struct CompareOperator
+    public readonly struct CompareOperator
     {
         private readonly CompareOperatorType _type;
 
@@ -11,15 +11,15 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Operators
             _type = type;
         }
 
-        public bool Compare(decimal value, decimal targetValue)
+        public bool Compare(decimal actualValue, decimal targetValue)
         {
-            switch (_type)
+            return _type switch
             {
-                case CompareOperatorType.Bigger: return value > targetValue;
-                case CompareOperatorType.Less: return value < targetValue;
-                case CompareOperatorType.Equal: return value == targetValue;
-                default: throw new NotSupportedException($"{_type.ToString()}");
-            }
+                CompareOperatorType.Bigger => actualValue > targetValue,
+                CompareOperatorType.Less => actualValue < targetValue,
+                CompareOperatorType.Equal => actualValue == targetValue,
+                _ => throw new NotSupportedException($"{_type.ToString()}")
+            };
         }
     }
 }
