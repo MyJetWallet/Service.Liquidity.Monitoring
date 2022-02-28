@@ -4,20 +4,20 @@ using Service.Liquidity.TradingPortfolio.Domain.Models;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.Metrics
 {
-    public class CollateralAmountPortfolioMetric : IPortfolioMetric
+    public class DailyVelocityUsdPortfolioMetric : IPortfolioMetric
     {
-        public PortfolioMetricType Type { get; set; } = PortfolioMetricType.CollateralPercent;
+        public PortfolioMetricType Type { get; set; } = PortfolioMetricType.DailyVelocityUsd;
 
         public decimal Calculate(Portfolio portfolio, PortfolioMetricParams portfolioMetricParams)
         {
-            var assetCollateralAmount = portfolio.Assets
+            var assetCollateralPercent = portfolio.Assets
                 .Where(a => portfolioMetricParams.AssetSymbols.Contains(a.Key))
-                .Sum(x => x.Value.DailyVelocity);
-            var compareAssetCollateralAmount = portfolio.Assets
+                .Sum(x => x.Value.DailyVelocityRiskInUsd);
+            var compareAssetCollateralPercent = portfolio.Assets
                 .Where(a => portfolioMetricParams.CompareAssetSymbols.Contains(a.Key))
-                .Sum(x => x.Value.DailyVelocity);
+                .Sum(x => x.Value.DailyVelocityRiskInUsd);
                     
-            return assetCollateralAmount - compareAssetCollateralAmount;
+            return assetCollateralPercent - compareAssetCollateralPercent;
         }
     }
 }
