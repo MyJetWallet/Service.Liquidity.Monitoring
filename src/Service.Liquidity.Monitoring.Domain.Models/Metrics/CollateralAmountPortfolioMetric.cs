@@ -6,7 +6,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Metrics
 {
     public class CollateralAmountPortfolioMetric : IPortfolioMetric
     {
-        public PortfolioMetricType Type { get; set; } = PortfolioMetricType.CollateralAmount;
+        public PortfolioMetricType Type { get; set; } = PortfolioMetricType.CollateralPercent;
 
         public decimal Calculate(Portfolio portfolio, PortfolioMetricParams portfolioMetricParams)
         {
