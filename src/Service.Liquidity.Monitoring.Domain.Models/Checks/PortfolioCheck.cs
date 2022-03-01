@@ -23,8 +23,8 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
 
         public string GetDescription()
         {
-            const string activeSymbol = "👍";
-            const string inactiveSymbol = "\u2757";
+            const string inactiveSymbol = "👍";
+            const string activeSymbol = "\u2757";
 
             var metricName = MetricType.ToString();
             var title = CurrentState.IsActive
