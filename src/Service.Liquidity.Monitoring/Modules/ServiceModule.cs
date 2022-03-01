@@ -36,18 +36,24 @@ namespace Service.Liquidity.Monitoring.Modules
                 .AutoActivate()
                 .SingleInstance();
             
+            builder
+                .RegisterType<ExecutePortfolioChecksJob>()
+                .As<IStartable>()
+                .SingleInstance()
+                .AutoActivate();
+            
             builder.RegisterType<CheckAssetPortfolioStatusBackgroundService>()
                 .SingleInstance()
                 .AutoActivate()
                 .AsSelf();
             
-            builder.RegisterType<PortfolioCheckNoSqlStorage>()
-                .As<IPortfolioCheckStorage>()
+            builder.RegisterType<PortfolioChecksNoSqlStorage>()
+                .As<IPortfolioChecksStorage>()
                 .SingleInstance()
                 .AutoActivate()
                 .AsSelf();
-            builder.RegisterType<PortfolioMetricFactory>()
-                .As<IPortfolioMetricFactory>()
+            builder.RegisterType<PortfolioMetricsFactory>()
+                .As<IPortfolioMetricsFactory>()
                 .SingleInstance()
                 .AutoActivate()
                 .AsSelf();

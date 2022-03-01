@@ -6,11 +6,11 @@ using Service.Liquidity.Monitoring.Domain.Services;
 
 namespace Service.Liquidity.Monitoring.Services
 {
-    public class PortfolioMetricFactory : IPortfolioMetricFactory
+    public class PortfolioMetricsFactory : IPortfolioMetricsFactory
     {
         private readonly Dictionary<PortfolioMetricType, IPortfolioMetric> _metrics;
 
-        public PortfolioMetricFactory()
+        public PortfolioMetricsFactory()
         {
             _metrics = new Dictionary<PortfolioMetricType, IPortfolioMetric>
             {

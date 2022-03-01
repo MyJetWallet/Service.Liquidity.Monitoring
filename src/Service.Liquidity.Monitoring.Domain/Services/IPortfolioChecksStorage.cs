@@ -4,11 +4,12 @@ using Service.Liquidity.Monitoring.Domain.Models.Checks;
 
 namespace Service.Liquidity.Monitoring.Domain.Services
 {
-    public interface IPortfolioCheckStorage
+    public interface IPortfolioChecksStorage
     {
         Task<IEnumerable<PortfolioCheck>> GetAsync();
         Task AddOrUpdateAsync(PortfolioCheck model);
         Task<PortfolioCheck> GetAsync(string id);
         Task DeleteAsync(string id);
+        Task BulkInsetOrUpdateAsync(IEnumerable<PortfolioCheck> models);
     }
 }

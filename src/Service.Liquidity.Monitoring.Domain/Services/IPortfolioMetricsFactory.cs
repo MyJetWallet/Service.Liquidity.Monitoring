@@ -4,7 +4,7 @@ using Service.Liquidity.Monitoring.Domain.Models.Metrics.Common;
 
 namespace Service.Liquidity.Monitoring.Domain.Services
 {
-    public interface IPortfolioMetricFactory
+    public interface IPortfolioMetricsFactory
     {
         IPortfolioMetric Get(PortfolioMetricType type);
         IEnumerable<IPortfolioMetric> Get();

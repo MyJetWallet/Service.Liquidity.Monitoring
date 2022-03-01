@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using Service.Liquidity.Monitoring.Domain.Models.Metrics.Common;
 using Service.Liquidity.Monitoring.Domain.Models.Operators;
@@ -19,27 +20,36 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
         [DataMember(Order = 7)] public CompareOperatorType OperatorType { get; set; }
         [DataMember(Order = 8)] public PortfolioCheckState CurrentState { get; set; }
         [DataMember(Order = 9)] public PortfolioCheckState PrevState { get; set; }
+        [DataMember(Order = 10)] public DateTime? LastIsActiveChangedDate { get; set; }
 
-        public bool Matches(Portfolio portfolio, Dictionary<PortfolioMetricType, IPortfolioMetric> metrics)
+        public bool Execute(Portfolio portfolio, IPortfolioMetric metric)
         {
-            if (!metrics.TryGetValue(MetricType, out var metric))
+            if (metric == null || metric.Type != MetricType)
             {
-                throw new Exception($"Metric {MetricType.ToString()} not found for check {Name}");
+                throw new Exception($"Provided invalid metric {metric?.Type} for check {Name}");
             }
             
             var metricParams = new PortfolioMetricParams
             {
-                AssetSymbols = AssetSymbols,
-                CompareAssetSymbols = CompareAssetSymbols
+                AssetSymbols = AssetSymbols ?? ArraySegment<string>.Empty,
+                CompareAssetSymbols = CompareAssetSymbols ?? ArraySegment<string>.Empty
             };
 
-            var metricResult = metric.Calculate(portfolio, metricParams);
+            var metricValue = metric.Calculate(portfolio, metricParams);
             var compareOperator = new CompareOperator(OperatorType);
-            var result = compareOperator.Compare(metricResult, TargetValue);
-            PrevState = CurrentState;
-            CurrentState = new PortfolioCheckState(result);
+            var isActive = compareOperator.Compare(metricValue, TargetValue);
+            var isChanged = false;
 
-            return result;
+            if (PrevState?.IsActive != isActive)
+            {
+                LastIsActiveChangedDate = DateTime.UtcNow;
+                isChanged = true;
+                PrevState = CurrentState;
+            }
+            
+            CurrentState = new PortfolioCheckState(isActive, metricValue);
+
+            return isChanged;
         }
     }
 }

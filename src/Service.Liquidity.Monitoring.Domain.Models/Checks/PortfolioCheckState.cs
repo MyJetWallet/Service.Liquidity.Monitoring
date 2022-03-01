@@ -12,10 +12,11 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
         
         public PortfolioCheckState() {}
 
-        public PortfolioCheckState(bool isActive)
+        public PortfolioCheckState(bool isActive, decimal metricValue)
         {
             Date = DateTime.UtcNow;
             IsActive = isActive;
+            MetricValue = metricValue;
         }
     }
 }

@@ -4,11 +4,11 @@ using Service.Liquidity.Monitoring.Domain.Services;
 
 namespace Service.Liquidity.Monitoring.NoSql.Checks
 {
-    public class PortfolioCheckNoSqlStorage : IPortfolioCheckStorage
+    public class PortfolioChecksNoSqlStorage : IPortfolioChecksStorage
     {
         private readonly IMyNoSqlServerDataWriter<PortfolioCheckNoSql> _myNoSqlServerDataWriter;
 
-        public PortfolioCheckNoSqlStorage(
+        public PortfolioChecksNoSqlStorage(
             IMyNoSqlServerDataWriter<PortfolioCheckNoSql> myNoSqlServerDataWriter
         )
         {
@@ -40,6 +40,12 @@ namespace Service.Liquidity.Monitoring.NoSql.Checks
         {
             await _myNoSqlServerDataWriter.DeleteAsync(PortfolioCheckNoSql.GeneratePartitionKey(),
                 PortfolioCheckNoSql.GenerateRowKey(id));
+        }
+        
+        public async Task BulkInsetOrUpdateAsync(IEnumerable<PortfolioCheck> models)
+        {
+            var nosqlModels = models.Select(PortfolioCheckNoSql.Create);
+            await _myNoSqlServerDataWriter.BulkInsertOrReplaceAsync(nosqlModels);
         }
     }
 }

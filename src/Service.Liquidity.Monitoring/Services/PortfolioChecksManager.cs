@@ -7,18 +7,18 @@ namespace Service.Liquidity.Monitoring.Services
 {
     public class PortfolioChecksManager : IPortfolioChecksManager
     {
-        private readonly IPortfolioCheckStorage _portfolioCheckStorage;
+        private readonly IPortfolioChecksStorage _portfolioChecksStorage;
 
         public PortfolioChecksManager(
-            IPortfolioCheckStorage portfolioCheckStorage
+            IPortfolioChecksStorage portfolioChecksStorage
         )
         {
-            _portfolioCheckStorage = portfolioCheckStorage;
+            _portfolioChecksStorage = portfolioChecksStorage;
         }
 
         public async Task<GetPortfolioCheckListResponse> GetListAsync(GetPortfolioCheckListRequest request)
         {
-            var items = await _portfolioCheckStorage.GetAsync();
+            var items = await _portfolioChecksStorage.GetAsync();
 
             return new GetPortfolioCheckListResponse
             {
@@ -28,14 +28,14 @@ namespace Service.Liquidity.Monitoring.Services
 
         public async Task<AddOrUpdatePortfolioCheckResponse> AddOrUpdateAsync(AddOrUpdatePortfolioCheckRequest request)
         {
-            await _portfolioCheckStorage.AddOrUpdateAsync(request.Item);
+            await _portfolioChecksStorage.AddOrUpdateAsync(request.Item);
 
             return new AddOrUpdatePortfolioCheckResponse();
         }
 
         public async Task<GetPortfolioCheckResponse> GetAsync(GetPortfolioCheckRequest request)
         {
-            var item = await _portfolioCheckStorage.GetAsync(request.Id);
+            var item = await _portfolioChecksStorage.GetAsync(request.Id);
 
             return new GetPortfolioCheckResponse
             {
@@ -45,7 +45,7 @@ namespace Service.Liquidity.Monitoring.Services
 
         public async Task<DeletePortfolioCheckResponse> DeleteAsync(DeletePortfolioCheckRequest request)
         {
-            await _portfolioCheckStorage.DeleteAsync(request.Id);
+            await _portfolioChecksStorage.DeleteAsync(request.Id);
 
             return new DeletePortfolioCheckResponse();
         }

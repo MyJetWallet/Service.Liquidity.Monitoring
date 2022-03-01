@@ -22,9 +22,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 7)] public MonitoringRuleState CurrentState { get; set; }
         [DataMember(Order = 8)] public string Id { get; set; }
 
-        public bool Matches(Portfolio portfolio,
-            IEnumerable<PortfolioCheck> checks,
-            Dictionary<PortfolioMetricType, IPortfolioMetric> metrics)
+        public bool Matches(IEnumerable<PortfolioCheck> checks)
         {
             var hashSet = CheckIds.ToHashSet();
             var ruleChecks = checks
@@ -33,14 +31,14 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 
             if (ruleChecks.Count != hashSet.Count)
             {
-                throw new Exception("Some of checks Not Found");
+                throw new Exception($"Some of checks Not Found for Rule {Name}");
             }
 
             switch (LogicalOperatorType)
             {
                 case LogicalOperatorType.All:
                 {
-                    var result = ruleChecks.All(ch => ch.Matches(portfolio, metrics));
+                    var result = ruleChecks.All(ch => ch.CurrentState.IsActive);
                     PrevState = CurrentState;
                     CurrentState = new MonitoringRuleState(result);
 
@@ -48,7 +46,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
                 }
                 case LogicalOperatorType.Any:
                 {
-                    var result = ruleChecks.Any(ch => ch.Matches(portfolio, metrics));
+                    var result = ruleChecks.Any(ch => ch.CurrentState.IsActive);
                     PrevState = CurrentState;
                     CurrentState = new MonitoringRuleState(result);
 
