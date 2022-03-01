@@ -20,7 +20,21 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
         [DataMember(Order = 7)] public CompareOperatorType OperatorType { get; set; }
         [DataMember(Order = 8)] public PortfolioCheckState CurrentState { get; set; }
         [DataMember(Order = 9)] public PortfolioCheckState PrevState { get; set; }
-        [DataMember(Order = 10)] public DateTime? LastIsActiveChangedDate { get; set; }
+
+        public string GetDescription()
+        {
+            const string activeSymbol = "👍";
+            const string inactiveSymbol = "\u2757";
+
+            var metricName = MetricType.ToString();
+            var title = CurrentState.IsActive
+                ? $"{activeSymbol} {Name} <b>{metricName}</b> hit target: {TargetValue}"
+                : $"{inactiveSymbol} {Name} <b>{metricName}</b> is normal";
+
+            return $"{title}{Environment.NewLine}" +
+                   $"Current value: <b>{CurrentState.MetricValue}</b>{Environment.NewLine}" +
+                   $"Date: {CurrentState.Date:yyyy-MM-dd hh:mm:ss}";
+        }
 
         public bool Execute(Portfolio portfolio, IPortfolioMetric metric)
         {
@@ -28,7 +42,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
             {
                 throw new Exception($"Provided invalid metric {metric?.Type} for check {Name}");
             }
-            
+
             var metricParams = new PortfolioMetricParams
             {
                 AssetSymbols = AssetSymbols ?? ArraySegment<string>.Empty,
@@ -39,15 +53,16 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
             var compareOperator = new CompareOperator(OperatorType);
             var isActive = compareOperator.Compare(metricValue, TargetValue);
             var isChanged = false;
+            var isActiveChangedDate = CurrentState?.IsActiveChangedDate;
 
             if (PrevState?.IsActive != isActive)
             {
-                LastIsActiveChangedDate = DateTime.UtcNow;
+                isActiveChangedDate = DateTime.UtcNow;
                 isChanged = true;
                 PrevState = CurrentState;
             }
-            
-            CurrentState = new PortfolioCheckState(isActive, metricValue);
+
+            CurrentState = new PortfolioCheckState(isActive, isActiveChangedDate, metricValue);
 
             return isChanged;
         }

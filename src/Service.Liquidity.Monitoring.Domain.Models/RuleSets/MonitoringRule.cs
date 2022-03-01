@@ -13,6 +13,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
     [DataContract]
     public class MonitoringRule
     {
+        [DataMember(Order = 8)] public string Id { get; set; }
         [DataMember(Order = 1)] public string Name { get; set; }
         [DataMember(Order = 2)] public IEnumerable<string> CheckIds { get; set; }
         [DataMember(Order = 3)] public LogicalOperatorType LogicalOperatorType { get; set; }
@@ -20,9 +21,93 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 5)] public MonitoringRuleAction Action { get; set; }
         [DataMember(Order = 6)] public MonitoringRuleState PrevState { get; set; }
         [DataMember(Order = 7)] public MonitoringRuleState CurrentState { get; set; }
-        [DataMember(Order = 8)] public string Id { get; set; }
 
-        public bool Matches(IEnumerable<PortfolioCheck> checks)
+        public void SetNotificationDate(DateTime date)
+        {
+            CurrentState.NotificationSendDate = date;
+        }
+
+        public bool IsNeedNotification(bool isActiveChanged)
+        {
+            if (!IsNotificationEnabled())
+            {
+                return false;
+            }
+
+            if (isActiveChanged)
+            {
+                return true;
+            }
+
+            var timeElapsed = DateTime.UtcNow - CurrentState.NotificationSendDate > TimeSpan.FromMinutes(60);
+
+            return timeElapsed;
+        }
+
+        public string GetNotificationMessage(IEnumerable<PortfolioCheck> checks)
+        {
+            var ruleChecks = Filter(checks);
+            var title = $"{Name} {(CurrentState.IsActive ? "active" : "inactive")}";
+            var checksDesc = string.Join($"{Environment.NewLine}{Environment.NewLine}",
+                ruleChecks.Select(ch => ch.GetDescription()));
+
+            return $"{title}{Environment.NewLine}{checksDesc}";
+        }
+
+        public bool Execute(IEnumerable<PortfolioCheck> checks)
+        {
+            var ruleChecks = Filter(checks);
+
+            switch (LogicalOperatorType)
+            {
+                case LogicalOperatorType.All:
+                {
+                    var isActive = ruleChecks.All(ch => ch.CurrentState.IsActive);
+                    var isChanged = false;
+                    var isActiveChangedDate = CurrentState?.IsActiveChangedDate;
+
+                    if (PrevState?.IsActive != isActive)
+                    {
+                        isChanged = true;
+                        isActiveChangedDate = DateTime.UtcNow;
+                        PrevState = CurrentState;
+                    }
+
+                    CurrentState = new MonitoringRuleState(isActive, isActiveChangedDate, CheckIds);
+
+                    return isChanged;
+                }
+                case LogicalOperatorType.Any:
+                {
+                    var activeCheckIds = ruleChecks
+                        .Where(ch => ch.CurrentState.IsActive)
+                        .Select(ch => ch.Id)
+                        .ToList();
+                    var isActive = activeCheckIds.Any();
+                    var isChanged = false;
+                    var isActiveChangedDate = CurrentState?.IsActiveChangedDate;
+
+                    if (PrevState?.IsActive != isActive)
+                    {
+                        isChanged = true;
+                        isActiveChangedDate = DateTime.UtcNow;
+                        PrevState = CurrentState;
+                    }
+
+                    CurrentState = new MonitoringRuleState(isActive, isActiveChangedDate, activeCheckIds);
+
+                    return isChanged;
+                }
+                default: throw new NotSupportedException($"{nameof(LogicalOperatorType)}");
+            }
+        }
+
+        private bool IsNotificationEnabled()
+        {
+            return !string.IsNullOrWhiteSpace(NotificationChannelId);
+        }
+
+        private IEnumerable<PortfolioCheck> Filter(IEnumerable<PortfolioCheck> checks)
         {
             var hashSet = CheckIds.ToHashSet();
             var ruleChecks = checks
@@ -31,29 +116,10 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 
             if (ruleChecks.Count != hashSet.Count)
             {
-                throw new Exception($"Some of checks Not Found for Rule {Name}");
+                throw new Exception($"Not all checks found for Rule {Name}");
             }
 
-            switch (LogicalOperatorType)
-            {
-                case LogicalOperatorType.All:
-                {
-                    var result = ruleChecks.All(ch => ch.CurrentState.IsActive);
-                    PrevState = CurrentState;
-                    CurrentState = new MonitoringRuleState(result);
-
-                    return result;
-                }
-                case LogicalOperatorType.Any:
-                {
-                    var result = ruleChecks.Any(ch => ch.CurrentState.IsActive);
-                    PrevState = CurrentState;
-                    CurrentState = new MonitoringRuleState(result);
-
-                    return result;
-                }
-                default: throw new NotSupportedException($"{nameof(LogicalOperatorType)}");
-            }
+            return ruleChecks;
         }
     }
 }
