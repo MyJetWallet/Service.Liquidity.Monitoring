@@ -17,12 +17,13 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         {
         }
 
-        public MonitoringRuleState(bool isActive, DateTime? isActiveChangedDate, IEnumerable<string> activeCheckIds = null)
+        public MonitoringRuleState(bool isActive, DateTime? isActiveChangedDate, DateTime? notificationSendDate, IEnumerable<string> activeCheckIds = null)
         {
             Date = DateTime.UtcNow;
             IsActive = isActive;
             ActiveCheckIds = activeCheckIds ?? ArraySegment<string>.Empty;
             IsActiveChangedDate = isActiveChangedDate;
+            NotificationSendDate = notificationSendDate;
         }
     }
 }

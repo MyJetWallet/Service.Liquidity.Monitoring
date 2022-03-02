@@ -82,7 +82,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
                         PrevState = CurrentState;
                     }
 
-                    CurrentState = new MonitoringRuleState(isActive, isActiveChangedDate, CheckIds);
+                    CurrentState = new MonitoringRuleState(isActive, isActiveChangedDate, CurrentState?.NotificationSendDate, CheckIds);
 
                     return isChanged;
                 }
@@ -103,7 +103,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
                         PrevState = CurrentState;
                     }
 
-                    CurrentState = new MonitoringRuleState(isActive, isActiveChangedDate, activeCheckIds);
+                    CurrentState = new MonitoringRuleState(isActive, isActiveChangedDate, CurrentState?.NotificationSendDate, CheckIds);
 
                     return isChanged;
                 }
