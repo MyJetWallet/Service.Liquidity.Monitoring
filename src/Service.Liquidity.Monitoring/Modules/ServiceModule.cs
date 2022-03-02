@@ -35,12 +35,7 @@ namespace Service.Liquidity.Monitoring.Modules
                 .As<IStartable>()
                 .AutoActivate()
                 .SingleInstance();
-            
-            builder
-                .RegisterType<ExecutePortfolioChecksJob>()
-                .As<IStartable>()
-                .SingleInstance()
-                .AutoActivate();
+
             builder
                 .RegisterType<ExecuteRuleSetsJob>()
                 .As<IStartable>()
