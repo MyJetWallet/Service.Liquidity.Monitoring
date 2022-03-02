@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using Humanizer;
 using Service.Liquidity.Monitoring.Domain.Models.Metrics.Common;
 using Service.Liquidity.Monitoring.Domain.Models.Operators;
 using Service.Liquidity.TradingPortfolio.Domain.Models;
@@ -24,16 +25,16 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
 
         public override string ToString()
         {
-            const string inactiveSymbol = "👍";
-            const string activeSymbol = "\u2757";
+            const string inactiveSymbol = "\U0001F7E2"; // green circle
+            const string activeSymbol = "\U0001F534"; // red circle
 
             var title = CurrentState.IsActive
-                ? $"{activeSymbol} Check {Name} hit target: {TargetValue}"
-                : $"{inactiveSymbol} Check {Name} is inactive";
+                ? $"{activeSymbol} Check <b>{Name}</b> is active"
+                : $"{inactiveSymbol} Check <b>{Name}</b> is inactive";
 
             return $"{title}{Environment.NewLine}" +
-                   $"{MetricType.ToString()} value: <b>{CurrentState.MetricValue}</b>{Environment.NewLine}" +
-                   $"Date: {CurrentState.Date:yyyy-MM-dd hh:mm:ss}";
+                   $"{MetricType.Humanize()} value: <b>{CurrentState.MetricValue}</b>{Environment.NewLine}" +
+                   $"Target value: <b>{TargetValue}</b>";
         }
 
         public string GenerateDescription()

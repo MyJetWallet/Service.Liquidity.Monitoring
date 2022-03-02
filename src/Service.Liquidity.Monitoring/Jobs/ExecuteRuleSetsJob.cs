@@ -136,7 +136,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                         await _notificationPublisher.PublishAsync(new MonitoringNotificationMessage
                         {
                             ChannelId = rule.NotificationChannelId,
-                            Text = rule.GetNotificationMessage(checksArr)
+                            Text = rule.GetNotificationText(checksArr)
                         });
                         rule.SetNotificationSendDate(DateTime.UtcNow);
                     }

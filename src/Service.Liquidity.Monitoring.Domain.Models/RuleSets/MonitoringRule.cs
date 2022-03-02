@@ -35,6 +35,11 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
                 return false;
             }
 
+            if (CurrentState.NotificationSendDate == null)
+            {
+                return true;
+            }
+
             if (isActiveChanged)
             {
                 return true;
@@ -45,16 +50,16 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
             return timeElapsed;
         }
 
-        public string GetNotificationMessage(IEnumerable<PortfolioCheck> checks)
+        public string GetNotificationText(IEnumerable<PortfolioCheck> checks)
         {
             var ruleChecks = Filter(checks);
             var title =
-                $"Rule {Name} is {(CurrentState.IsActive ? "active" : "inactive")}:{Environment.NewLine}{Description}";
+                $"Rule <b>{Name}</b> is {(CurrentState.IsActive ? "active" : "inactive")}:{Environment.NewLine}{Description}";
             var checkDescriptions = ruleChecks.Select(ch => ch.GenerateDescription());
             var body = string.Join($"{Environment.NewLine}", checkDescriptions);
 
             return $"{title}{Environment.NewLine}" +
-                   $"{body}{Environment.NewLine}" +
+                   $"{body}{Environment.NewLine}{Environment.NewLine}" +
                    $"Date: {CurrentState.Date:yyyy-MM-dd hh:mm:ss}";
         }
 
