@@ -127,7 +127,7 @@ namespace Service.Liquidity.Monitoring.Jobs
 
             foreach (var ruleSet in ruleSets)
             {
-                foreach (var rule in ruleSet.Rules)
+                foreach (var rule in ruleSet.Rules ?? ArraySegment<MonitoringRule>.Empty)
                 {
                     var isActiveChanged = rule.Execute(checksArr);
 
