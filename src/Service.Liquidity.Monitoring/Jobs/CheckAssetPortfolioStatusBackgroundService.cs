@@ -92,9 +92,6 @@ namespace Service.Liquidity.Monitoring.Jobs
                 var lastAssetStatus = _assetPortfolioStatusStorage.GetAssetPortfolioStatusByAsset(asset.Symbol);
                 var actualAssetStatus = GetActualStatusByAsset(asset, assetSettingsByAsset);
                 
-                _logger.LogInformation("Check asset {asset} last: {@lastAssetStatus} current: {@actualAssetStatus}", 
-                    asset.Symbol, lastAssetStatus, actualAssetStatus);
-                
                 if (lastAssetStatus != null)
                 {
                     if (IsStatusChanged(lastAssetStatus.Velocity, actualAssetStatus.Velocity))
