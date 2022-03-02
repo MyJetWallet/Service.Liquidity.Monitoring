@@ -5,5 +5,7 @@ namespace Service.Liquidity.Monitoring.Grpc.Models.RuleSets
     [DataContract]
     public class AddOrUpdateMonitoringRuleSetResponse
     {
+        [DataMember(Order = 2)] public string ErrorMessage { get; set; }
+        [DataMember(Order = 1)] public bool IsError { get; set; }
     }
 }

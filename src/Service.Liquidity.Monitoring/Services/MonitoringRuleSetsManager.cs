@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Grpc;
@@ -21,37 +22,81 @@ namespace Service.Liquidity.Monitoring.Services
 
         public async Task<GetMonitoringRuleSetListResponse> GetListAsync(GetMonitoringRuleSetListRequest request)
         {
-            var items = await _monitoringRuleSetsStorage.GetAsync();
-
-            return new GetMonitoringRuleSetListResponse
+            try
             {
-                Items = items
-            };
+                var items = await _monitoringRuleSetsStorage.GetAsync();
+
+                return new GetMonitoringRuleSetListResponse
+                {
+                    Items = items
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GetMonitoringRuleSetListResponse
+                {
+                    IsError = true,
+                    ErrorMessage = ex.Message
+                };
+            }
         }
 
         public async Task<AddOrUpdateMonitoringRuleSetResponse> AddOrUpdateAsync(
             AddOrUpdateMonitoringRuleSetRequest request)
         {
-            await _monitoringRuleSetsStorage.AddOrUpdateAsync(request.Item);
+            try
+            {
+                await _monitoringRuleSetsStorage.AddOrUpdateAsync(request.Item);
 
-            return new AddOrUpdateMonitoringRuleSetResponse();
+                return new AddOrUpdateMonitoringRuleSetResponse();
+            }
+            catch (Exception ex)
+            {
+                return new AddOrUpdateMonitoringRuleSetResponse
+                {
+                    IsError = true,
+                    ErrorMessage = ex.Message
+                };
+            }
         }
 
         public async Task<GetMonitoringRuleSetResponse> GetAsync(GetMonitoringRuleSetRequest request)
         {
-            var item = await _monitoringRuleSetsStorage.GetAsync(request.Id);
-
-            return new GetMonitoringRuleSetResponse
+            try
             {
-                Item = item
-            };
+                var item = await _monitoringRuleSetsStorage.GetAsync(request.Id);
+
+                return new GetMonitoringRuleSetResponse
+                {
+                    Item = item
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GetMonitoringRuleSetResponse
+                {
+                    IsError = true,
+                    ErrorMessage = ex.Message
+                };
+            }
         }
 
         public async Task<DeleteMonitoringRuleSetResponse> DeleteAsync(DeleteMonitoringRuleSetRequest request)
         {
-            await _monitoringRuleSetsStorage.DeleteAsync(request.Id);
+            try
+            {
+                await _monitoringRuleSetsStorage.DeleteAsync(request.Id);
 
-            return new DeleteMonitoringRuleSetResponse();
+                return new DeleteMonitoringRuleSetResponse();
+            }
+            catch (Exception ex)
+            {
+                return new DeleteMonitoringRuleSetResponse
+                {
+                    IsError = true,
+                    ErrorMessage = ex.Message
+                };
+            }
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,56 +24,100 @@ namespace Service.Liquidity.Monitoring.Services
 
         public async Task<GetPortfolioCheckListResponse> GetListAsync(GetPortfolioCheckListRequest request)
         {
-            var items = await _portfolioChecksStorage.GetAsync();
-
-            return new GetPortfolioCheckListResponse
+            try
             {
-                Items = items
-            };
+                var items = await _portfolioChecksStorage.GetAsync();
+
+                return new GetPortfolioCheckListResponse
+                {
+                    Items = items
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GetPortfolioCheckListResponse
+                {
+                    IsError = true,
+                    ErrorMessage = ex.Message
+                };
+            }
         }
 
         public async Task<AddOrUpdatePortfolioCheckResponse> AddOrUpdateAsync(AddOrUpdatePortfolioCheckRequest request)
         {
-            await _portfolioChecksStorage.AddOrUpdateAsync(request.Item);
+            try
+            {
+                await _portfolioChecksStorage.AddOrUpdateAsync(request.Item);
 
-            return new AddOrUpdatePortfolioCheckResponse();
+                return new AddOrUpdatePortfolioCheckResponse();
+            }
+            catch (Exception ex)
+            {
+                return new AddOrUpdatePortfolioCheckResponse
+                {
+                    IsError = true,
+                    ErrorMessage = ex.Message
+                };
+            }
         }
 
         public async Task<GetPortfolioCheckResponse> GetAsync(GetPortfolioCheckRequest request)
         {
-            var item = await _portfolioChecksStorage.GetAsync(request.Id);
-
-            return new GetPortfolioCheckResponse
+            try
             {
-                Item = item
-            };
+                var item = await _portfolioChecksStorage.GetAsync(request.Id);
+
+                return new GetPortfolioCheckResponse
+                {
+                    Item = item
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GetPortfolioCheckResponse
+                {
+                    IsError = true,
+                    ErrorMessage = ex.Message
+                };
+            }
         }
 
         public async Task<DeletePortfolioCheckResponse> DeleteAsync(DeletePortfolioCheckRequest request)
         {
-            await _portfolioChecksStorage.DeleteAsync(request.Id);
-            var ruleSets = await _monitoringRuleSetsStorage.GetAsync();
-
-            foreach (var ruleSet in ruleSets)
+            try
             {
-                var ruleSetChanged = false;
+                await _portfolioChecksStorage.DeleteAsync(request.Id);
+                var ruleSets = await _monitoringRuleSetsStorage.GetAsync();
 
-                foreach (var rule in ruleSet.Rules)
+                foreach (var ruleSet in ruleSets)
                 {
-                    if (rule.CheckIds.Contains(request.Id))
+                    var ruleSetChanged = false;
+
+                    foreach (var rule in ruleSet.Rules)
                     {
-                        rule.CheckIds = new List<string>(rule.CheckIds.Where(id => id != request.Id));
-                        ruleSetChanged = true;
+                        if (rule.CheckIds.Contains(request.Id))
+                        {
+                            rule.CheckIds = new List<string>(rule.CheckIds.Where(id => id != request.Id));
+                            ruleSetChanged = true;
+                        }
+                    }
+
+                    if (ruleSetChanged)
+                    {
+                        await _monitoringRuleSetsStorage.AddOrUpdateAsync(ruleSet);
                     }
                 }
 
-                if (ruleSetChanged)
-                {
-                    await _monitoringRuleSetsStorage.AddOrUpdateAsync(ruleSet);
-                }
+                return new DeletePortfolioCheckResponse();
             }
-
-            return new DeletePortfolioCheckResponse();
+            catch (Exception ex)
+            {
+                return new DeletePortfolioCheckResponse
+                {
+                    IsError = true,
+                    ErrorMessage = ex.Message
+                };
+            }
         }
     }
 }
