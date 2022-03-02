@@ -112,6 +112,8 @@ namespace Service.Liquidity.Monitoring.Jobs
             if (!checksArr.Any())
             {
                 _logger.LogWarning("Can't ExecuteRuleSetsAsync. PortfolioChecks not found");
+                
+                return;
             }
 
             var ruleSets = (await _ruleSetsStorage.GetAsync())?.ToList() ?? new List<MonitoringRuleSet>();
@@ -119,6 +121,8 @@ namespace Service.Liquidity.Monitoring.Jobs
             if (!ruleSets.Any())
             {
                 _logger.LogWarning("Can't ExecuteRuleSetsAsync. RuleSets not found");
+                
+                return;
             }
 
             foreach (var ruleSet in ruleSets)

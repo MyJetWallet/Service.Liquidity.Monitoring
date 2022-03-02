@@ -21,6 +21,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 5)] public MonitoringRuleAction Action { get; set; }
         [DataMember(Order = 6)] public MonitoringRuleState PrevState { get; set; }
         [DataMember(Order = 7)] public MonitoringRuleState CurrentState { get; set; }
+        [DataMember(Order = 9)] public string Description { get; set; }
 
         public void SetNotificationSendDate(DateTime date)
         {
@@ -47,11 +48,14 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         public string GetNotificationMessage(IEnumerable<PortfolioCheck> checks)
         {
             var ruleChecks = Filter(checks);
-            var title = $"{Name} {(CurrentState.IsActive ? "active" : "inactive")}";
-            var checksDesc = string.Join($"{Environment.NewLine}{Environment.NewLine}",
-                ruleChecks.Select(ch => ch.GetDescription()));
+            var title =
+                $"Rule {Name} is {(CurrentState.IsActive ? "active" : "inactive")}:{Environment.NewLine}{Description}";
+            var checkDescriptions = ruleChecks.Select(ch => ch.GenerateDescription());
+            var body = string.Join($"{Environment.NewLine}", checkDescriptions);
 
-            return $"{title}{Environment.NewLine}{checksDesc}";
+            return $"{title}{Environment.NewLine}" +
+                   $"{body}{Environment.NewLine}" +
+                   $"Date: {CurrentState.Date:yyyy-MM-dd hh:mm:ss}";
         }
 
         public bool Execute(IEnumerable<PortfolioCheck> checks)

@@ -20,20 +20,30 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
         [DataMember(Order = 7)] public CompareOperatorType OperatorType { get; set; }
         [DataMember(Order = 8)] public PortfolioCheckState CurrentState { get; set; }
         [DataMember(Order = 9)] public PortfolioCheckState PrevState { get; set; }
+        [DataMember(Order = 10)] public string Description { get; set; }
 
-        public string GetDescription()
+        public override string ToString()
         {
             const string inactiveSymbol = "👍";
             const string activeSymbol = "\u2757";
 
-            var metricName = MetricType.ToString();
             var title = CurrentState.IsActive
-                ? $"{activeSymbol} {Name} <b>{metricName}</b> hit target: {TargetValue}"
-                : $"{inactiveSymbol} {Name} <b>{metricName}</b> is normal";
+                ? $"{activeSymbol} Check {Name} hit target: {TargetValue}"
+                : $"{inactiveSymbol} Check {Name} is inactive";
 
             return $"{title}{Environment.NewLine}" +
-                   $"Current value: <b>{CurrentState.MetricValue}</b>{Environment.NewLine}" +
+                   $"{MetricType.ToString()} value: <b>{CurrentState.MetricValue}</b>{Environment.NewLine}" +
                    $"Date: {CurrentState.Date:yyyy-MM-dd hh:mm:ss}";
+        }
+
+        public string GenerateDescription()
+        {
+            if (string.IsNullOrWhiteSpace(Description))
+            {
+                return ToString();
+            }
+
+            return $"Check {Name} is {(CurrentState.IsActive ? "active" : "inactive")}:{Environment.NewLine}{Description}";
         }
 
         public bool Execute(Portfolio portfolio, IPortfolioMetric metric)
