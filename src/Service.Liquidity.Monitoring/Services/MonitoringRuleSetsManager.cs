@@ -8,12 +8,15 @@ namespace Service.Liquidity.Monitoring.Services
     public class MonitoringRuleSetsManager : IMonitoringRuleSetsManager
     {
         private readonly IMonitoringRuleSetsStorage _monitoringRuleSetsStorage;
+        private readonly IPortfolioChecksStorage _portfolioChecksStorage;
 
         public MonitoringRuleSetsManager(
-            IMonitoringRuleSetsStorage monitoringRuleSetsStorage
+            IMonitoringRuleSetsStorage monitoringRuleSetsStorage,
+            IPortfolioChecksStorage portfolioChecksStorage
         )
         {
             _monitoringRuleSetsStorage = monitoringRuleSetsStorage;
+            _portfolioChecksStorage = portfolioChecksStorage;
         }
 
         public async Task<GetMonitoringRuleSetListResponse> GetListAsync(GetMonitoringRuleSetListRequest request)
