@@ -22,7 +22,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 6)] public MonitoringRuleState PrevState { get; set; }
         [DataMember(Order = 7)] public MonitoringRuleState CurrentState { get; set; }
 
-        public void SetNotificationDate(DateTime date)
+        public void SetNotificationSendDate(DateTime date)
         {
             CurrentState.NotificationSendDate = date;
         }

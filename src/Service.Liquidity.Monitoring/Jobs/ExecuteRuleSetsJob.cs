@@ -134,7 +134,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                             ChannelId = rule.NotificationChannelId,
                             Text = rule.GetNotificationMessage(checksArr)
                         });
-                        rule.SetNotificationDate(DateTime.UtcNow);
+                        rule.SetNotificationSendDate(DateTime.UtcNow);
                     }
                 }
 
