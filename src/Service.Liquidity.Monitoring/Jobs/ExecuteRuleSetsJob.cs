@@ -6,7 +6,7 @@ using Autofac;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service.Tools;
 using MyJetWallet.Sdk.ServiceBus;
-using Service.Liquidity.Bot.Domain.Models;
+using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
 using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
 using Service.Liquidity.Monitoring.Domain.Services;
@@ -18,14 +18,14 @@ namespace Service.Liquidity.Monitoring.Jobs
         private readonly ILogger<ExecutePortfolioChecksJob> _logger;
         private readonly IMonitoringRuleSetsStorage _ruleSetsStorage;
         private readonly IPortfolioChecksStorage _portfolioChecksStorage;
-        private readonly IServiceBusPublisher<SendNotificationCommand> _notificationPublisher;
+        private readonly IServiceBusPublisher<MonitoringNotificationMessage> _notificationPublisher;
         private readonly MyTaskTimer _timer;
 
         public ExecuteRuleSetsJob(
             ILogger<ExecutePortfolioChecksJob> logger,
             IMonitoringRuleSetsStorage ruleSetsStorage,
             IPortfolioChecksStorage portfolioChecksStorage,
-            IServiceBusPublisher<SendNotificationCommand> notificationPublisher
+            IServiceBusPublisher<MonitoringNotificationMessage> notificationPublisher
         )
         {
             _logger = logger;
@@ -70,10 +70,10 @@ namespace Service.Liquidity.Monitoring.Jobs
                         
                         if (rule.IsNeedNotification(isActiveChanged))
                         {
-                            await _notificationPublisher.PublishAsync(new SendNotificationCommand
+                            await _notificationPublisher.PublishAsync(new MonitoringNotificationMessage
                             {
                                 ChannelId = rule.NotificationChannelId,
-                                Message = rule.GetNotificationMessage(checks)
+                                Text = rule.GetNotificationMessage(checks)
                             });
                             rule.SetNotificationDate(DateTime.UtcNow);
                         }
