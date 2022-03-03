@@ -45,9 +45,9 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
                 return true;
             }
 
-            var timeElapsed = DateTime.UtcNow - CurrentState.NotificationSendDate > TimeSpan.FromMinutes(60);
+            var timeToRemind = DateTime.UtcNow - CurrentState.NotificationSendDate > TimeSpan.FromMinutes(60);
 
-            return timeElapsed;
+            return CurrentState.IsActive && timeToRemind;
         }
 
         public string GetNotificationText(IEnumerable<PortfolioCheck> checks)
