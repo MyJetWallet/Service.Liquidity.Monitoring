@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Grpc;
 using Service.Liquidity.Monitoring.Grpc.Models.Checks;
@@ -10,14 +12,17 @@ namespace Service.Liquidity.Monitoring.Services
 {
     public class PortfolioChecksManager : IPortfolioChecksManager
     {
+        private readonly ILogger<PortfolioChecksManager> _logger;
         private readonly IPortfolioChecksStorage _portfolioChecksStorage;
         private readonly IMonitoringRuleSetsStorage _monitoringRuleSetsStorage;
 
         public PortfolioChecksManager(
+            ILogger<PortfolioChecksManager> logger,
             IPortfolioChecksStorage portfolioChecksStorage,
             IMonitoringRuleSetsStorage monitoringRuleSetsStorage
         )
         {
+            _logger = logger;
             _portfolioChecksStorage = portfolioChecksStorage;
             _monitoringRuleSetsStorage = monitoringRuleSetsStorage;
         }
@@ -35,6 +40,7 @@ namespace Service.Liquidity.Monitoring.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed GetList {@request}", request);
                 return new GetPortfolioCheckListResponse
                 {
                     IsError = true,
@@ -53,6 +59,8 @@ namespace Service.Liquidity.Monitoring.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed AddOrUpdate {@request}", request);
+
                 return new AddOrUpdatePortfolioCheckResponse
                 {
                     IsError = true,
@@ -74,6 +82,8 @@ namespace Service.Liquidity.Monitoring.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed Get {@request}", request);
+
                 return new GetPortfolioCheckResponse
                 {
                     IsError = true,
@@ -89,11 +99,11 @@ namespace Service.Liquidity.Monitoring.Services
                 await _portfolioChecksStorage.DeleteAsync(request.Id);
                 var ruleSets = await _monitoringRuleSetsStorage.GetAsync();
 
-                foreach (var ruleSet in ruleSets)
+                foreach (var ruleSet in ruleSets ?? ArraySegment<MonitoringRuleSet>.Empty)
                 {
                     var ruleSetChanged = false;
 
-                    foreach (var rule in ruleSet.Rules)
+                    foreach (var rule in ruleSet.Rules ?? ArraySegment<MonitoringRule>.Empty)
                     {
                         if (rule.CheckIds.Contains(request.Id))
                         {
@@ -112,6 +122,8 @@ namespace Service.Liquidity.Monitoring.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed Delete {@request}", request);
+
                 return new DeletePortfolioCheckResponse
                 {
                     IsError = true,
