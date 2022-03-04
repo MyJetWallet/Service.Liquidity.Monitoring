@@ -145,6 +145,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                             Text = rule.GetNotificationText(checksArr)
                         };
                         await _notificationsService.SendAsync(message);
+                        _logger.LogInformation("Send Notification {@model}", message);
                         rule.SetNotificationSendDate(DateTime.UtcNow);
                     }
                 }
