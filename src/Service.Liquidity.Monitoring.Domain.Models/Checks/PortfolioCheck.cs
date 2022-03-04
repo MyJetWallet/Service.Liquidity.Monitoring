@@ -60,9 +60,9 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
                 CompareAssetSymbols = CompareAssetSymbols ?? ArraySegment<string>.Empty
             };
 
-            var metricValue = metric.Calculate(portfolio, metricParams);
+            var metricValue = decimal.Round(metric.Calculate(portfolio, metricParams), 2);
             var compareOperator = new CompareOperator(OperatorType);
-            var isActive = compareOperator.Compare(decimal.Round(metricValue, 2), TargetValue);
+            var isActive = compareOperator.Compare(metricValue, TargetValue);
             var isChanged = false;
             var isActiveChangedDate = CurrentState?.IsActiveChangedDate;
 
