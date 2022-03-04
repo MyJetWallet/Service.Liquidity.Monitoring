@@ -46,7 +46,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             _notificationPublisher = notificationPublisher;
             _monitoringRuleSetsCache = monitoringRuleSetsCache;
             _timer = new MyTaskTimer(nameof(ExecuteRuleSetsJob),
-                    TimeSpan.FromMilliseconds(1000),
+                    TimeSpan.FromMilliseconds(5000),
                     logger,
                     DoTimeAsync)
                 .DisableTelemetry();
