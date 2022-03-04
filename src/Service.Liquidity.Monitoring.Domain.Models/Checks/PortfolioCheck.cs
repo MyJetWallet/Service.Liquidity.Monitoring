@@ -62,7 +62,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
 
             var metricValue = metric.Calculate(portfolio, metricParams);
             var compareOperator = new CompareOperator(OperatorType);
-            var isActive = compareOperator.Compare(metricValue, TargetValue);
+            var isActive = compareOperator.Compare(decimal.Round(metricValue, 2), TargetValue);
             var isChanged = false;
             var isActiveChangedDate = CurrentState?.IsActiveChangedDate;
 
