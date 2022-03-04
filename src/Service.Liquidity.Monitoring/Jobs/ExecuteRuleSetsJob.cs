@@ -133,11 +133,13 @@ namespace Service.Liquidity.Monitoring.Jobs
 
                     if (rule.IsNeedNotification(isActiveChanged))
                     {
-                        await _notificationPublisher.PublishAsync(new MonitoringNotificationMessage
+                        var message = new MonitoringNotificationMessage
                         {
                             ChannelId = rule.NotificationChannelId,
                             Text = rule.GetNotificationText(checksArr)
-                        });
+                        };
+                        await _notificationPublisher.PublishAsync(message);
+                        _logger.LogDebug("Publish {@message}", message);
                         rule.SetNotificationSendDate(DateTime.UtcNow);
                     }
                 }
