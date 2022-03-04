@@ -70,7 +70,7 @@ namespace Service.Liquidity.Monitoring.Modules
             
             //Publishers
             builder.RegisterMyServiceBusPublisher<AssetPortfolioStatusMessage>(serviceBusClient, AssetPortfolioStatusMessage.TopicName, true);
-            builder.RegisterMyServiceBusPublisher<MonitoringNotificationMessage>(serviceBusClient, MonitoringNotificationMessage.SbTopicName, false);
+            builder.RegisterMyServiceBusPublisher<MonitoringNotificationMessage>(serviceBusClient, MonitoringNotificationMessage.SbTopicName, true);
 
         }
     }
