@@ -22,5 +22,8 @@ namespace Service.Liquidity.Monitoring.Settings
         
         [YamlProperty("LiquidityMonitoring.SpotServiceBusHostPort")]
         public string SpotServiceBusHostPort { get; set; }
+        
+        [YamlProperty("LiquidityMonitoring.LiquidityBotServiceUrl")]
+        public string LiquidityBotServiceUrl { get; set; }
     }
 }
