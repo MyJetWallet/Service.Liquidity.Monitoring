@@ -1,7 +1,6 @@
 ﻿using Autofac;
 using MyJetWallet.Sdk.NoSql;
 using MyJetWallet.Sdk.ServiceBus;
-using Service.Liquidity.Bot.Client;
 using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Jobs;
@@ -27,7 +26,6 @@ namespace Service.Liquidity.Monitoring.Modules
             builder.RegisterMyNoSqlWriter<MonitoringRuleSetNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
                 MonitoringRuleSetNoSql.TableName);
             builder.RegisterMyNoSqlReader<MonitoringRuleSetNoSql>(noSqlClient, MonitoringRuleSetNoSql.TableName);
-            builder.RegisterLiquidityBotClient(Program.Settings.LiquidityBotServiceUrl);
 
             //todo: рассказать Леше =))
             builder

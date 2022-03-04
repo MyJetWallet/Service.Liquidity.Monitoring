@@ -7,14 +7,11 @@ using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service.Tools;
 using MyJetWallet.Sdk.ServiceBus;
 using MyNoSqlServer.Abstractions;
-using Service.Liquidity.Bot.Grpc;
-using Service.Liquidity.Bot.Grpc.Models.Notifications;
 using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
 using Service.Liquidity.Monitoring.Domain.Models.Metrics.Common;
 using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
 using Service.Liquidity.Monitoring.Domain.Services;
-using Service.Liquidity.Monitoring.Grpc;
 using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
 
 namespace Service.Liquidity.Monitoring.Jobs
@@ -27,7 +24,7 @@ namespace Service.Liquidity.Monitoring.Jobs
         private readonly IMyNoSqlServerDataReader<PortfolioNoSql> _portfolioReader;
         private readonly IPortfolioMetricsFactory _portfolioMetricsFactory;
         private readonly IMonitoringRuleSetsCache _monitoringRuleSetsCache;
-        private readonly INotificationsService _notificationsService;
+        private readonly IServiceBusPublisher<MonitoringNotificationMessage> _notificationPublisher;
         private readonly MyTaskTimer _timer;
 
         public ExecuteRuleSetsJob(
@@ -37,7 +34,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             IMyNoSqlServerDataReader<PortfolioNoSql> portfolioReader,
             IPortfolioMetricsFactory portfolioMetricsFactory,
             IMonitoringRuleSetsCache monitoringRuleSetsCache,
-            INotificationsService notificationsService
+            IServiceBusPublisher<MonitoringNotificationMessage> notificationPublisher
         )
         {
             _logger = logger;
@@ -46,7 +43,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             _portfolioReader = portfolioReader;
             _portfolioMetricsFactory = portfolioMetricsFactory;
             _monitoringRuleSetsCache = monitoringRuleSetsCache;
-            _notificationsService = notificationsService;
+            _notificationPublisher = notificationPublisher;
             _timer = new MyTaskTimer(nameof(ExecuteRuleSetsJob),
                     TimeSpan.FromMilliseconds(3000),
                     logger,
@@ -139,12 +136,12 @@ namespace Service.Liquidity.Monitoring.Jobs
 
                     if (rule.IsNeedNotification(isActiveChanged))
                     {
-                        var message = new SendNotificationRequest
+                        var message = new MonitoringNotificationMessage
                         {
                             ChannelId = rule.NotificationChannelId,
                             Text = rule.GetNotificationText(checksArr)
                         };
-                        await _notificationsService.SendAsync(message);
+                        await _notificationPublisher.PublishAsync(message);
                         _logger.LogInformation("Send Notification {@model}", message);
                         rule.SetNotificationSendDate(DateTime.UtcNow);
                     }
