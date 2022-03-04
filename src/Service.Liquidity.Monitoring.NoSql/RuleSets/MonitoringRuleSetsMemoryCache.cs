@@ -19,13 +19,13 @@ public class MonitoringRuleSetsMemoryCache : IMonitoringRuleSetsCache
         {
             lock (_data)
             {
-                _data = models.ToDictionary(m => m.Value.Id);
+                _data = _reader.Get().ToDictionary(d => d.Value.Id);
             }
         }, models =>
         {
             lock (_data)
             {
-                _data = models.ToDictionary(m => m.Value.Id);
+                _data = _reader.Get().ToDictionary(d => d.Value.Id);
             }
         });
     }
