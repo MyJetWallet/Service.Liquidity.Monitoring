@@ -12,6 +12,7 @@ using Service.Liquidity.Monitoring.Domain.Models.Checks;
 using Service.Liquidity.Monitoring.Domain.Models.Metrics.Common;
 using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
 using Service.Liquidity.Monitoring.Domain.Services;
+using Service.Liquidity.Monitoring.Grpc;
 using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
 
 namespace Service.Liquidity.Monitoring.Jobs
@@ -24,6 +25,7 @@ namespace Service.Liquidity.Monitoring.Jobs
         private readonly IMyNoSqlServerDataReader<PortfolioNoSql> _portfolioReader;
         private readonly IPortfolioMetricsFactory _portfolioMetricsFactory;
         private readonly IServiceBusPublisher<MonitoringNotificationMessage> _notificationPublisher;
+        private readonly IMonitoringRuleSetsCache _monitoringRuleSetsCache;
         private readonly MyTaskTimer _timer;
 
         public ExecuteRuleSetsJob(
@@ -32,7 +34,8 @@ namespace Service.Liquidity.Monitoring.Jobs
             IPortfolioChecksStorage portfolioChecksStorage,
             IMyNoSqlServerDataReader<PortfolioNoSql> portfolioReader,
             IPortfolioMetricsFactory portfolioMetricsFactory,
-            IServiceBusPublisher<MonitoringNotificationMessage> notificationPublisher
+            IServiceBusPublisher<MonitoringNotificationMessage> notificationPublisher,
+            IMonitoringRuleSetsCache monitoringRuleSetsCache
         )
         {
             _logger = logger;
@@ -41,6 +44,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             _portfolioReader = portfolioReader;
             _portfolioMetricsFactory = portfolioMetricsFactory;
             _notificationPublisher = notificationPublisher;
+            _monitoringRuleSetsCache = monitoringRuleSetsCache;
             _timer = new MyTaskTimer(nameof(ExecuteRuleSetsJob),
                     TimeSpan.FromMilliseconds(1000),
                     logger,
@@ -112,16 +116,16 @@ namespace Service.Liquidity.Monitoring.Jobs
             if (!checksArr.Any())
             {
                 _logger.LogWarning("Can't ExecuteRuleSetsAsync. PortfolioChecks not found");
-                
+
                 return;
             }
 
-            var ruleSets = (await _ruleSetsStorage.GetAsync())?.ToList() ?? new List<MonitoringRuleSet>();
+            var ruleSets = _monitoringRuleSetsCache.Get()?.ToList() ?? new List<MonitoringRuleSet>();
 
             if (!ruleSets.Any())
             {
                 _logger.LogWarning("Can't ExecuteRuleSetsAsync. RuleSets not found");
-                
+
                 return;
             }
 

@@ -9,35 +9,35 @@ namespace Service.Liquidity.Monitoring.Services
     public class MonitoringRuleSetsManager : IMonitoringRuleSetsManager
     {
         private readonly IMonitoringRuleSetsStorage _monitoringRuleSetsStorage;
-        private readonly IPortfolioChecksStorage _portfolioChecksStorage;
+        private readonly IMonitoringRuleSetsCache _monitoringRuleSetsCache;
 
         public MonitoringRuleSetsManager(
             IMonitoringRuleSetsStorage monitoringRuleSetsStorage,
-            IPortfolioChecksStorage portfolioChecksStorage
+            IMonitoringRuleSetsCache monitoringRuleSetsCache
         )
         {
             _monitoringRuleSetsStorage = monitoringRuleSetsStorage;
-            _portfolioChecksStorage = portfolioChecksStorage;
+            _monitoringRuleSetsCache = monitoringRuleSetsCache;
         }
 
-        public async Task<GetMonitoringRuleSetListResponse> GetListAsync(GetMonitoringRuleSetListRequest request)
+        public Task<GetMonitoringRuleSetListResponse> GetListAsync(GetMonitoringRuleSetListRequest request)
         {
             try
             {
-                var items = await _monitoringRuleSetsStorage.GetAsync();
+                var items = _monitoringRuleSetsCache.Get();
 
-                return new GetMonitoringRuleSetListResponse
+                return Task.FromResult(new GetMonitoringRuleSetListResponse
                 {
                     Items = items
-                };
+                });
             }
             catch (Exception ex)
             {
-                return new GetMonitoringRuleSetListResponse
+                return Task.FromResult(new GetMonitoringRuleSetListResponse
                 {
                     IsError = true,
                     ErrorMessage = ex.Message
-                };
+                });
             }
         }
 

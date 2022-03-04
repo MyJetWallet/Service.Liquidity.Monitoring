@@ -21,6 +21,7 @@ namespace Service.Liquidity.Monitoring.Modules
             builder.RegisterMyNoSqlReader<PortfolioNoSql>(noSqlClient, PortfolioNoSql.TableName);
             builder.RegisterMyNoSqlWriter<PortfolioCheckNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl), PortfolioCheckNoSql.TableName);
             builder.RegisterMyNoSqlWriter<MonitoringRuleSetNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl), MonitoringRuleSetNoSql.TableName);
+            builder.RegisterMyNoSqlReader<MonitoringRuleSetNoSql>(noSqlClient, MonitoringRuleSetNoSql.TableName);
 
             //todo: рассказать Леше =))
             builder
@@ -67,6 +68,12 @@ namespace Service.Liquidity.Monitoring.Modules
             var serviceBusClient = builder.RegisterMyServiceBusTcpClient(
                 Program.ReloadedSettings(e => e.SpotServiceBusHostPort), 
                 Program.LogFactory);
+            
+            builder
+                .RegisterType<MonitoringRuleSetsMemoryCache>()
+                .As<IMonitoringRuleSetsCache>()
+                .AutoActivate()
+                .SingleInstance();
             
             //Publishers
             builder.RegisterMyServiceBusPublisher<AssetPortfolioStatusMessage>(serviceBusClient, AssetPortfolioStatusMessage.TopicName, true);
