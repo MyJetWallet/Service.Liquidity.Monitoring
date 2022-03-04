@@ -77,7 +77,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
             var isChanged = false;
             var isActiveChangedDate = CurrentState?.IsActiveChangedDate;
 
-            if (PrevState?.IsActive != isActive)
+            if (CurrentState?.IsActive != isActive)
             {
                 isChanged = true;
                 isActiveChangedDate = DateTime.UtcNow;
