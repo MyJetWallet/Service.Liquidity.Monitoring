@@ -65,50 +65,34 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 
         public bool Execute(IEnumerable<PortfolioCheck> checks)
         {
-            var ruleChecks = Filter(checks);
+            var ruleChecks = Filter(checks).ToArray();
 
-            switch (LogicalOperatorType)
+            var isActive = LogicalOperatorType switch
             {
-                case LogicalOperatorType.All:
-                {
-                    var isActive = ruleChecks.All(ch => ch.CurrentState.IsActive);
-                    var isChanged = false;
-                    var isActiveChangedDate = CurrentState?.IsActiveChangedDate;
+                LogicalOperatorType.All => ruleChecks.All(ch => ch.CurrentState.IsActive),
+                LogicalOperatorType.Any => ruleChecks.Any(ch => ch.CurrentState.IsActive),
+                _ => throw new NotSupportedException($"{nameof(LogicalOperatorType)}")
+            };
 
-                    if (PrevState?.IsActive != isActive)
-                    {
-                        isChanged = true;
-                        isActiveChangedDate = DateTime.UtcNow;
-                        PrevState = CurrentState;
-                    }
+            var isChanged = false;
+            var isActiveChangedDate = CurrentState?.IsActiveChangedDate;
 
-                    CurrentState = new MonitoringRuleState(isActive, isActiveChangedDate, CurrentState?.NotificationSendDate, CheckIds);
-
-                    return isChanged;
-                }
-                case LogicalOperatorType.Any:
-                {
-                    var activeCheckIds = ruleChecks
-                        .Where(ch => ch.CurrentState.IsActive)
-                        .Select(ch => ch.Id)
-                        .ToList();
-                    var isActive = activeCheckIds.Any();
-                    var isChanged = false;
-                    var isActiveChangedDate = CurrentState?.IsActiveChangedDate;
-
-                    if (PrevState?.IsActive != isActive)
-                    {
-                        isChanged = true;
-                        isActiveChangedDate = DateTime.UtcNow;
-                        PrevState = CurrentState;
-                    }
-
-                    CurrentState = new MonitoringRuleState(isActive, isActiveChangedDate, CurrentState?.NotificationSendDate, CheckIds);
-
-                    return isChanged;
-                }
-                default: throw new NotSupportedException($"{nameof(LogicalOperatorType)}");
+            if (PrevState?.IsActive != isActive)
+            {
+                isChanged = true;
+                isActiveChangedDate = DateTime.UtcNow;
+                PrevState = CurrentState;
             }
+
+            var activeCheckIds = ruleChecks
+                .Where(ch => ch.CurrentState.IsActive)
+                .Select(ch => ch.Id);
+            CurrentState = new MonitoringRuleState(isActive,
+                isActiveChangedDate,
+                CurrentState?.NotificationSendDate,
+                activeCheckIds);
+
+            return isChanged;
         }
 
         private bool IsNotificationEnabled()
