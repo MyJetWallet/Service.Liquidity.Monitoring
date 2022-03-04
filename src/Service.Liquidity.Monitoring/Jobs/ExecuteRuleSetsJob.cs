@@ -139,7 +139,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                             Text = rule.GetNotificationText(checksArr)
                         };
                         await _notificationPublisher.PublishAsync(message);
-                        _logger.LogDebug("Publish {@message}", message);
+                        _logger.LogInformation("Publish MonitoringNotificationMessage {@message}", message);
                         rule.SetNotificationSendDate(DateTime.UtcNow);
                     }
                 }

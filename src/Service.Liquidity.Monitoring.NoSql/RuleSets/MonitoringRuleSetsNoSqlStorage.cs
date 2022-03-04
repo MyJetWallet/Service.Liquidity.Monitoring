@@ -7,6 +7,7 @@ namespace Service.Liquidity.Monitoring.NoSql.RuleSets
     public class MonitoringRuleSetsNoSqlStorage : IMonitoringRuleSetsStorage
     {
         private readonly IMyNoSqlServerDataWriter<MonitoringRuleSetNoSql> _myNoSqlServerDataWriter;
+        private Dictionary<string, MonitoringRuleSet> _cache = new ();
 
         public MonitoringRuleSetsNoSqlStorage(
             IMyNoSqlServerDataWriter<MonitoringRuleSetNoSql> myNoSqlServerDataWriter
