@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Service.Liquidity.Monitoring.Domain.Models.Checks;
+using Service.Liquidity.Monitoring.Domain.Models.Hedging.Common;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 {

@@ -8,4 +8,8 @@
     <ProjectReference Include="..\Service.Liquidity.Monitoring.Domain.Models\Service.Liquidity.Monitoring.Domain.Models.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MyJetWallet.Sdk.ServiceBus" Version="2.2.2" />
+  </ItemGroup>
+
 </Project>

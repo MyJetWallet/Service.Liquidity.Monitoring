@@ -77,7 +77,26 @@ namespace Service.Liquidity.Monitoring.Modules
                 .RegisterType<MonitoringRuleSetsMemoryCache>()
                 .As<IMonitoringRuleSetsCache>()
                 .AutoActivate()
-                .SingleInstance();
+                .SingleInstance()
+                .AsSelf();
+            builder
+                .RegisterType<HedgeStrategiesFactory>()
+                .As<IHedgeStrategiesFactory>()
+                .AutoActivate()
+                .SingleInstance()
+                .AsSelf();
+            builder
+                .RegisterType<MonitoringRuleSetsExecutor>()
+                .As<IMonitoringRuleSetsExecutor>()
+                .AutoActivate()
+                .SingleInstance()
+                .AsSelf();
+            builder
+                .RegisterType<PortfolioChecksExecutor>()
+                .As<IPortfolioChecksExecutor>()
+                .AutoActivate()
+                .SingleInstance()
+                .AsSelf();
 
             //Publishers
             builder.RegisterMyServiceBusPublisher<AssetPortfolioStatusMessage>(serviceBusClient,

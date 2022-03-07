@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
+using Service.Liquidity.Monitoring.Domain.Models.Hedging;
+using Service.Liquidity.Monitoring.Domain.Models.Hedging.Common;
 using Service.Liquidity.Monitoring.Domain.Models.Metrics;
 using Service.Liquidity.Monitoring.Domain.Models.Metrics.Common;
 using Service.Liquidity.Monitoring.Domain.Models.Operators;
@@ -18,10 +20,11 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 2)] public IEnumerable<string> CheckIds { get; set; }
         [DataMember(Order = 3)] public LogicalOperatorType LogicalOperatorType { get; set; }
         [DataMember(Order = 4)] public string NotificationChannelId { get; set; }
-        [DataMember(Order = 5)] public MonitoringRuleAction Action { get; set; }
+        [DataMember(Order = 5)] public HedgeStrategyType HedgeStrategyType { get; set; }
         [DataMember(Order = 6)] public MonitoringRuleState PrevState { get; set; }
         [DataMember(Order = 7)] public MonitoringRuleState CurrentState { get; set; }
         [DataMember(Order = 9)] public string Description { get; set; }
+        [DataMember(Order = 10)] public HedgeStrategyParams HedgeStrategyParams { get; set; }
 
         public void SetNotificationSendDate(DateTime date)
         {
