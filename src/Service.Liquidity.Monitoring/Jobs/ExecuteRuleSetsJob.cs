@@ -5,8 +5,7 @@ using Autofac;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service.Tools;
 using MyNoSqlServer.Abstractions;
-
-using Service.Liquidity.Monitoring.Domain.Services;
+using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
 
 namespace Service.Liquidity.Monitoring.Jobs

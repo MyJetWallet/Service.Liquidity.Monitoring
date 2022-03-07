@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Service.Liquidity.Monitoring.Domain.Services;
+namespace Service.Liquidity.Monitoring.Domain.Interfaces;
 
 public interface IHedgeService
 {

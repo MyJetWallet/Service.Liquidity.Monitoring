@@ -5,15 +5,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Autofac;
-using MyJetWallet.Sdk.GrpcMetrics;
 using MyJetWallet.Sdk.GrpcSchema;
 using MyJetWallet.Sdk.Service;
 using Prometheus;
-using ProtoBuf.Grpc.Server;
 using Service.Liquidity.Monitoring.Grpc;
 using Service.Liquidity.Monitoring.Modules;
 using Service.Liquidity.Monitoring.Services;
-using SimpleTrading.BaseMetrics;
 using SimpleTrading.ServiceStatusReporterConnector;
 
 namespace Service.Liquidity.Monitoring

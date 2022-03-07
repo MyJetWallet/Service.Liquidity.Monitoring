@@ -1,13 +1,12 @@
 ﻿using Service.Liquidity.Monitoring.Domain.Models;
 
-namespace Service.Liquidity.Monitoring.Domain.Extentions
+namespace Service.Liquidity.Monitoring.Domain.Extensions
 {
-    public static  class StatusMessageExtention
+    public static class StatusMessageExtension
     {
-
         public static AssetPortfolioStatusMessage PrepareMessage(
-            this Status actualAssetStatus, 
-            string asset, 
+            this Status actualAssetStatus,
+            string asset,
             string message)
         {
             return new AssetPortfolioStatusMessage

@@ -2,26 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
-using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
 using MyJetWallet.Sdk.Service.Tools;
 using MyJetWallet.Sdk.ServiceBus;
 using MyNoSqlServer.Abstractions;
-using Newtonsoft.Json;
-using Service.Liquidity.Monitoring.Domain.Extentions;
+using Service.Liquidity.Monitoring.Domain.Extensions;
+using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Models;
-using Service.Liquidity.Monitoring.Domain.Services;
-using Service.Liquidity.TradingPortfolio.Client;
 using Service.Liquidity.TradingPortfolio.Domain.Models;
 using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
 
 namespace Service.Liquidity.Monitoring.Jobs
 {
-    public class CheckAssetPortfolioStatusBackgroundService
+    public class RefreshPortfolioStatusesJob
     {
-        private readonly ILogger<CheckAssetPortfolioStatusBackgroundService> _logger;
+        private readonly ILogger<RefreshPortfolioStatusesJob> _logger;
         private readonly IMyNoSqlServerDataReader<PortfolioNoSql> _myNoSqlServerDataReader;
         private readonly IAssetPortfolioSettingsStorage _assetPortfolioSettingsStorage;
         private readonly IAssetPortfolioStatusStorage _assetPortfolioStatusStorage;
@@ -32,9 +28,9 @@ namespace Service.Liquidity.Monitoring.Jobs
         private static readonly TimeSpan DefaultLastAlarmEventTimeSpan = TimeSpan.FromMinutes(60);
         private const string SuccessUnicode = "👍";
         private const string FailUnicode = "\u2757";        
-        public CheckAssetPortfolioStatusBackgroundService(
+        public RefreshPortfolioStatusesJob(
             IMyNoSqlServerDataReader<PortfolioNoSql> myNoSqlServerDataReader,
-            ILogger<CheckAssetPortfolioStatusBackgroundService> logger,
+            ILogger<RefreshPortfolioStatusesJob> logger,
             IAssetPortfolioSettingsStorage assetPortfolioSettingsStorage,
             IAssetPortfolioStatusStorage assetPortfolioStatusStorage, 
             IServiceBusPublisher<AssetPortfolioStatusMessage> assetPortfolioStatusPublisher)
@@ -44,8 +40,8 @@ namespace Service.Liquidity.Monitoring.Jobs
             _assetPortfolioSettingsStorage = assetPortfolioSettingsStorage;
             _assetPortfolioStatusStorage = assetPortfolioStatusStorage;
             _assetPortfolioStatusPublisher = assetPortfolioStatusPublisher;
-            _operationsTimer = new MyTaskTimer(nameof(CheckAssetPortfolioStatusBackgroundService), 
-                DefaultMonitorTimer, logger, Process);
+            _operationsTimer = new MyTaskTimer(nameof(RefreshPortfolioStatusesJob), 
+                DefaultMonitorTimer, logger, DoAsync);
         }
 
         public void Start()
@@ -57,10 +53,9 @@ namespace Service.Liquidity.Monitoring.Jobs
             _operationsTimer.Stop();
         }
 
-        private async Task Process()
+        private async Task DoAsync()
         {
             var portfolio = _myNoSqlServerDataReader.Get().FirstOrDefault();
-            _logger.LogInformation("Get portfolio from PortfolioNoSql");
             await RefreshStatuses(portfolio?.Portfolio);
         }
 

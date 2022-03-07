@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace Service.Liquidity.Monitoring.Domain.Models

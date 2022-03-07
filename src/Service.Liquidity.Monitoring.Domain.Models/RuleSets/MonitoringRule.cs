@@ -3,12 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
-using Service.Liquidity.Monitoring.Domain.Models.Hedging;
 using Service.Liquidity.Monitoring.Domain.Models.Hedging.Common;
-using Service.Liquidity.Monitoring.Domain.Models.Metrics;
-using Service.Liquidity.Monitoring.Domain.Models.Metrics.Common;
 using Service.Liquidity.Monitoring.Domain.Models.Operators;
-using Service.Liquidity.TradingPortfolio.Domain.Models;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 {

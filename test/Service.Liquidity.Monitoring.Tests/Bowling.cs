@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Service.Liquidity.Monitoring.Jobs;
 
 namespace Service.Liquidity.Monitoring.Tests
@@ -16,7 +14,7 @@ namespace Service.Liquidity.Monitoring.Tests
         [TestCase(10, -5, 5, true)]
         public void TestThresholdVelocity(decimal currValue, decimal min, decimal max, bool result)
         {
-            var strike = CheckAssetPortfolioStatusBackgroundService.ThresholdVelocity(currValue, min, max);
+            var strike = RefreshPortfolioStatusesJob.ThresholdVelocity(currValue, min, max);
             Assert.AreEqual(result, strike.IsAlarm);
         }
 
@@ -26,7 +24,7 @@ namespace Service.Liquidity.Monitoring.Tests
         [TestCase(5000, -5000,  false)]
         public void ThresholdTotalVelocityRisk(decimal currValue, decimal min, bool result)
         {
-            var strike = CheckAssetPortfolioStatusBackgroundService.ThresholdMin(currValue, min);
+            var strike = RefreshPortfolioStatusesJob.ThresholdMin(currValue, min);
             Assert.AreEqual(result, strike.IsAlarm);
         }
     }

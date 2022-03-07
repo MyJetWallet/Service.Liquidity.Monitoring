@@ -5,8 +5,8 @@ using Autofac;
 using Microsoft.Extensions.Logging;
 using MyNoSqlServer.Abstractions;
 using Newtonsoft.Json;
+using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Models;
-using Service.Liquidity.Monitoring.Domain.Services;
 
 namespace Service.Liquidity.Monitoring.Services
 {

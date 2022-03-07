@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Models.Metrics;
 using Service.Liquidity.Monitoring.Domain.Models.Metrics.Common;
-using Service.Liquidity.Monitoring.Domain.Services;
 
-namespace Service.Liquidity.Monitoring.Services
+namespace Service.Liquidity.Monitoring.Domain.Services
 {
     public class PortfolioMetricsFactory : IPortfolioMetricsFactory
     {

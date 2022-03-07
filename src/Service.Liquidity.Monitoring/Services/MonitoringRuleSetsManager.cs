@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Service.Liquidity.Monitoring.Domain.Services;
+using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Grpc;
 using Service.Liquidity.Monitoring.Grpc.Models.RuleSets;
 

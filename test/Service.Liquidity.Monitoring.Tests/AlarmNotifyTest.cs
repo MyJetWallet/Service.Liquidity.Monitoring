@@ -26,7 +26,7 @@ namespace Service.Liquidity.Monitoring.Tests
                 IsAlarm = true
             };
         
-            var notify = CheckAssetPortfolioStatusBackgroundService.IsStatusChanged(last, actual);
+            var notify = RefreshPortfolioStatusesJob.IsStatusChanged(last, actual);
             Assert.AreEqual(true, notify);
         }
     
@@ -49,7 +49,7 @@ namespace Service.Liquidity.Monitoring.Tests
                 IsAlarm = false
             };
         
-            var notify = CheckAssetPortfolioStatusBackgroundService.IsStatusChanged(last, actual);
+            var notify = RefreshPortfolioStatusesJob.IsStatusChanged(last, actual);
             Assert.AreEqual(true, notify);
         }
     
@@ -72,7 +72,7 @@ namespace Service.Liquidity.Monitoring.Tests
                 IsAlarm = true
             };
         
-            var notify = CheckAssetPortfolioStatusBackgroundService.IsStatusChanged(last, actual);
+            var notify = RefreshPortfolioStatusesJob.IsStatusChanged(last, actual);
             Assert.AreEqual(false, notify);
         }
     
@@ -95,7 +95,7 @@ namespace Service.Liquidity.Monitoring.Tests
                 IsAlarm = true
             };
         
-            var notify = CheckAssetPortfolioStatusBackgroundService.IsStatusChanged(last, actual);
+            var notify = RefreshPortfolioStatusesJob.IsStatusChanged(last, actual);
             Assert.AreEqual(true, notify);
         }
     }

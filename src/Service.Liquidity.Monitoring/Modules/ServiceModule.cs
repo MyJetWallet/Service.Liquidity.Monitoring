@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Jobs;
 using Service.Liquidity.Monitoring.NoSql.Checks;
@@ -30,7 +31,7 @@ namespace Service.Liquidity.Monitoring.Modules
                 .SingleInstance()
                 .AutoActivate();
 
-            builder.RegisterType<CheckAssetPortfolioStatusBackgroundService>()
+            builder.RegisterType<RefreshPortfolioStatusesJob>()
                 .SingleInstance()
                 .AutoActivate()
                 .AsSelf();

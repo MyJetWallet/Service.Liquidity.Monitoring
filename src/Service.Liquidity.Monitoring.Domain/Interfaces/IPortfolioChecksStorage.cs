@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
 
-namespace Service.Liquidity.Monitoring.Domain.Services
+namespace Service.Liquidity.Monitoring.Domain.Interfaces
 {
     public interface IPortfolioChecksStorage
     {

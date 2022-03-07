@@ -1,6 +1,6 @@
 using MyNoSqlServer.Abstractions;
+using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
-using Service.Liquidity.Monitoring.Domain.Services;
 
 namespace Service.Liquidity.Monitoring.NoSql.Checks
 {

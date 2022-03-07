@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
-using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Grpc;
 using Service.Liquidity.Monitoring.Grpc.Models.Checks;
 
