@@ -63,6 +63,8 @@ namespace Service.Liquidity.Monitoring
         {
             builder.RegisterModule<SettingsModule>();
             builder.RegisterModule<ServiceModule>();
+            builder.RegisterModule<ServiceBusModule>();
+            builder.RegisterModule<NoSqlModule>();
         }
     }
 }
