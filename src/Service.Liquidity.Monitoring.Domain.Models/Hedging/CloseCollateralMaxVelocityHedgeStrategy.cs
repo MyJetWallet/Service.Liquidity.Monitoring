@@ -15,36 +15,43 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging
             HedgeStrategyParams strategyParams)
         {
             var collaterals = portfolio.Assets
-                .Where(a => a.Value.GetPositiveNetInUsd() != 0)
-                .OrderByDescending(a => a.Value.NetBalanceInUsd)
+                .Select(a => a.Value)
+                .Where(a => a.GetPositiveNetInUsd() != 0)
+                .OrderBy(a => a.DailyVelocityRiskInUsd)
                 .ToArray();
-
-            if (!collaterals.Any())
-            {
-                throw new Exception("Collaterals not found");
-            }
 
             var positions = portfolio.Assets
-                .Where(a => a.Value.GetNegativeNetInUsd() != 0)
-                .OrderByDescending(a => a.Value.NetBalanceInUsd)
+                .Select(a => a.Value)
+                .Where(a => a.GetNegativeNetInUsd() != 0)
+                .OrderBy(a => a.DailyVelocityRiskInUsd)
                 .ToArray();
 
-            if (!positions.Any())
+            var selectedAssets = checks.SelectMany(ch => ch.AssetSymbols).ToHashSet();
+            var targetPositions = positions.Where(asset => selectedAssets.Contains(asset.Symbol)).ToArray();
+
+            var hedgeParams = new HedgeParams();
+
+            for (var i = 0; i < targetPositions.Length; i++)
             {
-                throw new Exception("Collaterals not found");
+                hedgeParams.BuyAssets.Add(new HedgeParams.BuyAsset
+                {
+                    Priority = i,
+                    Symbol = positions[i].Symbol,
+                    NetBalanceInUsd = positions[i].NetBalanceInUsd
+                });
             }
 
-            var selectedAssets = checks.SelectMany(ch => ch.AssetSymbols).ToHashSet();
-            var amount = positions
-                .Where(p => selectedAssets.Contains(p.Key))
-                .Sum(p => p.Value.NetBalance);
-
-            return new HedgeParams
+            for (var i = 0; i < collaterals.Length; i++)
             {
-                Amount = amount * (strategyParams.AmountPercent / 100),
-                SellAssetSymbol = collaterals.FirstOrDefault().Key,
-                BuyAssetSymbol = positions.FirstOrDefault().Key
-            };
+                hedgeParams.SellAssets.Add(new HedgeParams.SellAsset
+                {
+                    Priority = i,
+                    Symbol = collaterals[i].Symbol,
+                    SellAmountInUsd = collaterals[i].NetBalanceInUsd * (strategyParams.AmountPercent / 100)
+                });
+            }
+
+            return hedgeParams;
         }
     }
 }

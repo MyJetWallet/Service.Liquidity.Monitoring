@@ -90,14 +90,14 @@ namespace Service.Liquidity.Monitoring.Domain.Services
                     return;
                 }
 
-                if (rule.HedgeStrategyType == HedgeStrategyType.None)
+                if (!rule.CurrentState.HedgeParams.Validate(out var errors))
                 {
-                    _logger.LogWarning($"Hedging is skipped. Found Rule {rule.Name} with NoneStrategy");
-                    return;
+                    _logger.LogWarning(
+                        $"Hedging is skipped. Found Rule {rule.Name} with invalid HedgeParams {string.Join(", ", errors)}");
+                    continue;
                 }
                 
                 await _hedgeService.HedgeAsync(rule.CurrentState.HedgeParams);
-
             }
 
             await _ruleSetsStorage.AddOrUpdateAsync(ruleSet);
