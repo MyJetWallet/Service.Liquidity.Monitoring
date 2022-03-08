@@ -1,6 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Domain.ExternalMarketApi;
+using MyJetWallet.Domain.ExternalMarketApi.Dto;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Models.Hedging.Common;
 
@@ -21,9 +23,19 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             _externalMarket = externalMarket;
         }
 
-        public Task HedgeAsync(HedgeParams hedgeParams)
+        public async Task HedgeAsync(HedgeParams hedgeParams)
         {
-            return Task.CompletedTask;
+            // get balances
+            var balancesResp = await _externalMarket.GetBalancesAsync(new GetBalancesRequest());
+            var sellAsset = hedgeParams.SellAssets.First();
+            var buyAsset = hedgeParams.BuyAssets.First();
+            var targetbalance = balancesResp.Balances
+                .FirstOrDefault(b => b.Symbol == sellAsset.Symbol);
+            
+            // get possible trade pairs on exchange
+            // find optimal trade
+            // make market order
+            // publish trade event
         }
     }
 }
