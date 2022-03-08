@@ -9,14 +9,14 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging
 {
     public class CloseCollateralMaxVelocityHedgeStrategy : IHedgeStrategy
     {
-        public HedgeStrategyType Type { get; set; }
+        public HedgeStrategyType Type { get; set; } = HedgeStrategyType.CloseCollateralMaxVelocity;
 
-        public HedgeCommandParams GetCommandParams(Portfolio portfolio, IEnumerable<PortfolioCheck> checks,
+        public HedgeParams CalculateHedgeParams(Portfolio portfolio, IEnumerable<PortfolioCheck> checks,
             HedgeStrategyParams strategyParams)
         {
             var collaterals = portfolio.Assets
                 .Where(a => a.Value.GetPositiveNetInUsd() != 0)
-                .OrderBy(a => a.Value.NetBalanceInUsd)
+                .OrderByDescending(a => a.Value.NetBalanceInUsd)
                 .ToArray();
 
             if (!collaterals.Any())
@@ -26,7 +26,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging
 
             var positions = portfolio.Assets
                 .Where(a => a.Value.GetNegativeNetInUsd() != 0)
-                .OrderBy(a => a.Value.NetBalanceInUsd)
+                .OrderByDescending(a => a.Value.NetBalanceInUsd)
                 .ToArray();
 
             if (!positions.Any())
@@ -39,7 +39,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging
                 .Where(p => selectedAssets.Contains(p.Key))
                 .Sum(p => p.Value.NetBalance);
 
-            return new HedgeCommandParams
+            return new HedgeParams
             {
                 Amount = amount * (strategyParams.AmountPercent / 100),
                 SellAssetSymbol = collaterals.FirstOrDefault().Key,

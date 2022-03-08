@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.ServiceBus;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
-using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
 using Service.Liquidity.Monitoring.Domain.Models.Hedging.Common;
 using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
@@ -20,13 +19,15 @@ namespace Service.Liquidity.Monitoring.Domain.Services
         private readonly IMonitoringRuleSetsCache _monitoringRuleSetsCache;
         private readonly IServiceBusPublisher<MonitoringNotificationMessage> _notificationPublisher;
         private readonly IHedgeStrategiesFactory _hedgeStrategiesFactory;
+        private readonly IHedgeService _hedgeService;
 
         public MonitoringRuleSetsExecutor(
             ILogger<MonitoringRuleSetsExecutor> logger,
             IMonitoringRuleSetsStorage ruleSetsStorage,
             IMonitoringRuleSetsCache monitoringRuleSetsCache,
             IServiceBusPublisher<MonitoringNotificationMessage> notificationPublisher,
-            IHedgeStrategiesFactory hedgeStrategiesFactory
+            IHedgeStrategiesFactory hedgeStrategiesFactory,
+            IHedgeService hedgeService
         )
         {
             _logger = logger;
@@ -34,16 +35,16 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             _monitoringRuleSetsCache = monitoringRuleSetsCache;
             _notificationPublisher = notificationPublisher;
             _hedgeStrategiesFactory = hedgeStrategiesFactory;
+            _hedgeService = hedgeService;
         }
 
         public async Task ExecuteAsync(Portfolio portfolio, IEnumerable<PortfolioCheck> checks)
         {
             var checksArr = checks?.ToArray() ?? Array.Empty<PortfolioCheck>();
-        
+
             if (!checksArr.Any())
             {
                 _logger.LogWarning("Can't ExecuteRuleSetsAsync. PortfolioChecks not found");
-
                 return;
             }
 
@@ -52,7 +53,6 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             if (!ruleSets.Any())
             {
                 _logger.LogWarning("Can't ExecuteRuleSetsAsync. RuleSets not found");
-
                 return;
             }
 
@@ -64,61 +64,43 @@ namespace Service.Liquidity.Monitoring.Domain.Services
 
         private async Task ExecuteRuleSetAsync(MonitoringRuleSet ruleSet, PortfolioCheck[] checks, Portfolio portfolio)
         {
-            var orderedRules = GetOrderedRules(ruleSet, checks, portfolio);
-
-            foreach (var (hedgeCommandParams, rule) in orderedRules)
+            foreach (var rule in ruleSet.Rules)
             {
-                var isActiveChanged = rule.Execute(checks);
+                var strategy = _hedgeStrategiesFactory.Get(rule.HedgeStrategyType);
+                rule.RefreshState(portfolio, checks, strategy);
+            }
+            
+            ruleSet.OrderRules();
 
-                if (rule.IsNeedNotification(isActiveChanged))
+            foreach (var rule in ruleSet.Rules)
+            {
+                if (rule.IsNeedNotification())
                 {
-                    var message = new MonitoringNotificationMessage
+                    await _notificationPublisher.PublishAsync(new MonitoringNotificationMessage
                     {
                         ChannelId = rule.NotificationChannelId,
                         Text = rule.GetNotificationText(checks)
-                    };
-                    await _notificationPublisher.PublishAsync(message);
-                    _logger.LogInformation("Send Notification {@model}", message);
+                    });
                     rule.SetNotificationSendDate(DateTime.UtcNow);
                 }
 
                 if (rule.HedgeStrategyType == HedgeStrategyType.Return)
                 {
-                    _logger.LogWarning($"RuleSet is skipped. Found Rule {rule.Name} with Return.");
+                    _logger.LogWarning($"RuleSet is skipped. Found Rule {rule.Name} with ReturnStrategy");
                     return;
                 }
 
-                // do hedging
+                if (rule.HedgeStrategyType == HedgeStrategyType.None)
+                {
+                    _logger.LogWarning($"Hedging is skipped. Found Rule {rule.Name} with NoneStrategy");
+                    return;
+                }
+                
+                await _hedgeService.HedgeAsync(rule.CurrentState.HedgeParams);
+
             }
 
             await _ruleSetsStorage.AddOrUpdateAsync(ruleSet);
-        }
-
-        private IEnumerable<(HedgeCommandParams hedgeCommandParams, MonitoringRule monitorinRule)> GetOrderedRules(
-            MonitoringRuleSet ruleSet, IEnumerable<PortfolioCheck> checks, Portfolio portfolio)
-        {
-            var rules = new List<MonitoringRule>();
-
-            foreach (var rule in ruleSet.Rules)
-            {
-                if (rule.HedgeStrategyType == HedgeStrategyType.Return)
-                {
-                    rules.Insert(0, rule);
-                }
-            }
-
-            return rules
-                .Select(rule =>
-                {
-                    var strategy = _hedgeStrategiesFactory.Get(rule.HedgeStrategyType);
-                    var ruleChecks = checks.Where(ch => rule.CheckIds.Contains(ch.Id));
-                    var commandParams =
-                        strategy.GetCommandParams(portfolio, ruleChecks, rule.HedgeStrategyParams);
-
-                    return (commandParams, rule);
-                })
-                .OrderByDescending(r => r.commandParams.Amount)
-                .ToArray();
         }
     }
 }

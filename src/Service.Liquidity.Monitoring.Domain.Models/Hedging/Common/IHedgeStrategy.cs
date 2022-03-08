@@ -8,7 +8,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging.Common
     {
         public HedgeStrategyType Type { get; set; }
 
-        public HedgeCommandParams GetCommandParams(Portfolio portfolio, IEnumerable<PortfolioCheck> checks,
+        public HedgeParams CalculateHedgeParams(Portfolio portfolio, IEnumerable<PortfolioCheck> checks,
             HedgeStrategyParams strategyParams);
     }
 }

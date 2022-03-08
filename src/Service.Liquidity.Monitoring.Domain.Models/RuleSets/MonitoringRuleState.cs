@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Service.Liquidity.Monitoring.Domain.Models.Hedging.Common;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 {
@@ -10,20 +11,40 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 1)] public DateTime Date { get; set; }
         [DataMember(Order = 2)] public bool IsActive { get; set; }
         [DataMember(Order = 3)] public IEnumerable<string> ActiveCheckIds { get; set; }
-        [DataMember(Order = 4)] public DateTime? IsActiveChangedDate { get; set; }
+        [DataMember(Order = 4)] public DateTime IsActiveChangedDate { get; set; }
         [DataMember(Order = 5)] public DateTime? NotificationSendDate { get; set; }
+        [DataMember(Order = 6)] public HedgeParams HedgeParams { get; set; }
 
-        public MonitoringRuleState()
+        public static MonitoringRuleState Create(bool isActive,
+            HedgeParams hedgeParams,
+            IEnumerable<string> activeCheckIds = null)
         {
+            return new MonitoringRuleState
+            {
+                Date = DateTime.UtcNow,
+                HedgeParams = hedgeParams,
+                IsActive = isActive,
+                ActiveCheckIds = activeCheckIds ?? Array.Empty<string>(),
+                NotificationSendDate = null,
+                IsActiveChangedDate = DateTime.UtcNow,
+            };
         }
 
-        public MonitoringRuleState(bool isActive, DateTime? isActiveChangedDate, DateTime? notificationSendDate, IEnumerable<string> activeCheckIds = null)
+        public void Refresh(bool isActive,
+            HedgeParams hedgeParams,
+            IEnumerable<string> activeCheckIds = null
+        )
         {
             Date = DateTime.UtcNow;
+
+            if (IsActive != isActive)
+            {
+                IsActiveChangedDate = Date;
+            }
+
             IsActive = isActive;
-            ActiveCheckIds = activeCheckIds ?? ArraySegment<string>.Empty;
-            IsActiveChangedDate = isActiveChangedDate;
-            NotificationSendDate = notificationSendDate;
+            HedgeParams = hedgeParams;
+            ActiveCheckIds = activeCheckIds ?? Array.Empty<string>();
         }
     }
 }

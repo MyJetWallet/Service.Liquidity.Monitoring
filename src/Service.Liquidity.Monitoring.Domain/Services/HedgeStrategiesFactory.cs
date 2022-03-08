@@ -16,7 +16,7 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             {
                 { HedgeStrategyType.CloseCollateralMaxVelocity, new CloseCollateralMaxVelocityHedgeStrategy() },
                 { HedgeStrategyType.Return, new ReturnHedgeStrategy() },
-                { HedgeStrategyType.None, new ReturnHedgeStrategy() }, // todo: find better solution
+                { HedgeStrategyType.None, new NoneHedgeStrategy() },
             };
         }
 

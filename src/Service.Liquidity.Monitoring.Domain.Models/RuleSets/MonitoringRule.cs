@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using Mapster;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
 using Service.Liquidity.Monitoring.Domain.Models.Hedging.Common;
 using Service.Liquidity.Monitoring.Domain.Models.Operators;
+using Service.Liquidity.TradingPortfolio.Domain.Models;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 {
@@ -27,9 +29,9 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
             CurrentState.NotificationSendDate = date;
         }
 
-        public bool IsNeedNotification(bool isActiveChanged)
+        public bool IsNeedNotification()
         {
-            if (!IsNotificationEnabled())
+            if (string.IsNullOrWhiteSpace(NotificationChannelId))
             {
                 return false;
             }
@@ -39,7 +41,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
                 return true;
             }
 
-            if (isActiveChanged)
+            if (CurrentState.IsActive != PrevState.IsActive)
             {
                 return true;
             }
@@ -62,41 +64,30 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
                    $"Date: {CurrentState.Date:yyyy-MM-dd hh:mm:ss}";
         }
 
-        public bool Execute(IEnumerable<PortfolioCheck> checks)
+        public void RefreshState(Portfolio portfolio, IEnumerable<PortfolioCheck> checks, IHedgeStrategy strategy)
         {
+            PrevState = CurrentState.Adapt<MonitoringRuleState>();
             var ruleChecks = Filter(checks).ToArray();
-
+            
             var isActive = LogicalOperatorType switch
             {
                 LogicalOperatorType.All => ruleChecks.All(ch => ch.CurrentState.IsActive),
                 LogicalOperatorType.Any => ruleChecks.Any(ch => ch.CurrentState.IsActive),
                 _ => throw new NotSupportedException($"{nameof(LogicalOperatorType)}")
             };
-
-            var isChanged = false;
-            var isActiveChangedDate = CurrentState?.IsActiveChangedDate;
-
-            if (CurrentState?.IsActive != isActive)
-            {
-                isChanged = true;
-                isActiveChangedDate = DateTime.UtcNow;
-                PrevState = CurrentState;
-            }
-
             var activeCheckIds = ruleChecks
                 .Where(ch => ch.CurrentState.IsActive)
                 .Select(ch => ch.Id);
-            CurrentState = new MonitoringRuleState(isActive,
-                isActiveChangedDate,
-                CurrentState?.NotificationSendDate,
-                activeCheckIds);
+            var hedgeParams = strategy.CalculateHedgeParams(portfolio, ruleChecks, HedgeStrategyParams);
 
-            return isChanged;
-        }
-
-        private bool IsNotificationEnabled()
-        {
-            return !string.IsNullOrWhiteSpace(NotificationChannelId);
+            if (CurrentState == null)
+            {
+                CurrentState = MonitoringRuleState.Create(isActive, hedgeParams, activeCheckIds);
+            }
+            else
+            {
+                CurrentState.Refresh(isActive, hedgeParams, activeCheckIds);
+            }
         }
 
         private IEnumerable<PortfolioCheck> Filter(IEnumerable<PortfolioCheck> checks)

@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using MyJetWallet.Sdk.ServiceBus;
 using Service.Liquidity.Monitoring.Domain.Models;
+using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
 
 namespace Service.Liquidity.Monitoring.Modules;
 

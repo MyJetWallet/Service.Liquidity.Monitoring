@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace Service.Liquidity.Monitoring.Domain.Models
+namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 {
     [DataContract]
     public class MonitoringNotificationMessage

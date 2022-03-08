@@ -76,6 +76,12 @@ namespace Service.Liquidity.Monitoring.Modules
                 .AutoActivate()
                 .SingleInstance()
                 .AsSelf();
+            builder
+                .RegisterType<HedgeService>()
+                .As<IHedgeService>()
+                .AutoActivate()
+                .SingleInstance()
+                .AsSelf();
         }
     }
 }

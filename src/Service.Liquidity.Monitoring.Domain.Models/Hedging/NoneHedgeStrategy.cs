@@ -5,9 +5,9 @@ using Service.Liquidity.TradingPortfolio.Domain.Models;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.Hedging
 {
-    public class ReturnHedgeStrategy : IHedgeStrategy
+    public class NoneHedgeStrategy : IHedgeStrategy
     {
-        public HedgeStrategyType Type { get; set; } = HedgeStrategyType.Return;
+        public HedgeStrategyType Type { get; set; } = HedgeStrategyType.None;
 
         public HedgeParams CalculateHedgeParams(Portfolio portfolio, IEnumerable<PortfolioCheck> checks,
             HedgeStrategyParams strategyParams)
