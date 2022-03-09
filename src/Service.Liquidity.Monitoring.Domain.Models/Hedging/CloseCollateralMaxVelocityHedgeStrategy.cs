@@ -21,7 +21,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging
                     .Select(a => a.Value)
                     .Where(a => a.GetNegativeNetInUsd() != 0 && selectedAssets.Contains(a.Symbol))
                     .OrderBy(a => a.DailyVelocityRiskInUsd)
-                    .Select(a => new HedgeParams.HedgeAsset
+                    .Select(a => new HedgeAsset
                     {
                         Weight = a.DailyVelocityRiskInUsd,
                         Symbol = a.Symbol,
@@ -32,7 +32,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging
                     .Select(a => a.Value)
                     .Where(a => a.GetPositiveNetInUsd() != 0 && !selectedAssets.Contains(a.Symbol))
                     .OrderBy(a => a.DailyVelocityRiskInUsd)
-                    .Select(a => new HedgeParams.HedgeAsset
+                    .Select(a => new HedgeAsset
                     {
                         Weight = a.DailyVelocityRiskInUsd,
                         Symbol = a.Symbol,

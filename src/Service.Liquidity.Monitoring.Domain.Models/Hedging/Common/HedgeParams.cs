@@ -38,12 +38,5 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging.Common
 
             return !errors.Any();
         }
-
-        public class HedgeAsset
-        {
-            public decimal Weight { get; set; }
-            public string Symbol { get; set; }
-            public decimal NetBalanceInUsd { get; set; }
-        }
     }
 }
