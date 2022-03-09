@@ -1,7 +1,10 @@
-﻿namespace Service.Liquidity.Monitoring.Domain.Models.Hedging.Common
+﻿using System.Runtime.Serialization;
+
+namespace Service.Liquidity.Monitoring.Domain.Models.Hedging.Common
 {
+    [DataContract]
     public class HedgeStrategyParams
     {
-        public decimal AmountPercent { get; set; }
+        [DataMember(Order = 1)] public decimal AmountPercent { get; set; }
     }
 }

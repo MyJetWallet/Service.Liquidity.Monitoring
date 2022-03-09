@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.Hedging.Common
 {
+    [DataContract]
     public class HedgeParams
     {
-        public List<HedgeAsset> BuyAssets { get; set; } = new List<HedgeAsset>();
-        public List<HedgeAsset> SellAssets { get; set; } = new List<HedgeAsset>();
-        public decimal AmountPercent { get; set; }
+        [DataMember(Order = 1)] public List<HedgeAsset> BuyAssets { get; set; } = new List<HedgeAsset>();
+        [DataMember(Order = 2)] public List<HedgeAsset> SellAssets { get; set; } = new List<HedgeAsset>();
+        [DataMember(Order = 3)] public decimal AmountPercent { get; set; }
 
         public decimal GetAmountInUsd()
         {
