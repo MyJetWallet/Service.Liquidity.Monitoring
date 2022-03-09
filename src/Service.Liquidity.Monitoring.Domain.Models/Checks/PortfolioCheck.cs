@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Humanizer;
+using Mapster;
 using Service.Liquidity.Monitoring.Domain.Models.Metrics.Common;
 using Service.Liquidity.Monitoring.Domain.Models.Operators;
 using Service.Liquidity.TradingPortfolio.Domain.Models;
@@ -43,10 +44,11 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
                 return ToString();
             }
 
-            return $"Check {Name} is {(CurrentState.IsActive ? "active" : "inactive")}:{Environment.NewLine}{Description}";
+            return
+                $"Check {Name} is {(CurrentState.IsActive ? "active" : "inactive")}:{Environment.NewLine}{Description}";
         }
 
-        public bool Execute(Portfolio portfolio, IPortfolioMetric metric)
+        public void RefreshState(Portfolio portfolio, IPortfolioMetric metric)
         {
             if (metric == null || metric.Type != MetricType)
             {
@@ -62,19 +64,20 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
             var metricValue = decimal.Round(metric.Calculate(portfolio, metricParams), 2);
             var compareOperator = new CompareOperator(OperatorType);
             var isActive = compareOperator.Compare(metricValue, TargetValue);
-            var isChanged = false;
-            var isActiveChangedDate = CurrentState?.IsActiveChangedDate;
 
             if (PrevState?.IsActive != isActive)
             {
-                isActiveChangedDate = DateTime.UtcNow;
-                isChanged = true;
-                PrevState = CurrentState;
+                PrevState = CurrentState.Adapt<PortfolioCheckState>();
             }
 
-            CurrentState = new PortfolioCheckState(isActive, isActiveChangedDate, metricValue);
-
-            return isChanged;
+            if (CurrentState == null)
+            {
+                CurrentState = PortfolioCheckState.Create(isActive, metricValue);
+            }
+            else
+            {
+                CurrentState.Refresh(isActive, metricValue);
+            }
         }
     }
 }

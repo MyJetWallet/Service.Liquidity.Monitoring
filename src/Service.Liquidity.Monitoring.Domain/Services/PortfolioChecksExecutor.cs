@@ -49,7 +49,7 @@ namespace Service.Liquidity.Monitoring.Domain.Services
 
             foreach (var check in checks)
             {
-                check.Execute(portfolio, metrics.FirstOrDefault(m => m.Type == check.MetricType));
+                check.RefreshState(portfolio, metrics.FirstOrDefault(m => m.Type == check.MetricType));
             }
 
             await _portfolioChecksStorage.BulkInsetOrUpdateAsync(checks);
