@@ -78,7 +78,12 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
             var activeCheckIds = ruleChecks
                 .Where(ch => ch.CurrentState.IsActive)
                 .Select(ch => ch.Id);
-            var hedgeParams = strategy.CalculateHedgeParams(portfolio, ruleChecks, HedgeStrategyParams);
+            var hedgeParams = new HedgeParams();
+            
+            if (isActive)
+            {
+                hedgeParams = strategy.CalculateHedgeParams(portfolio, ruleChecks, HedgeStrategyParams);
+            }
 
             if (CurrentState == null)
             {
