@@ -4,6 +4,6 @@
     {
         None = 0,
         Return = 1,
-        CloseCollateralMaxVelocity = 2,
+        ClosePositionMaxVelocity = 2,
     }
 }

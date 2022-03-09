@@ -14,7 +14,7 @@ namespace Service.Liquidity.Monitoring.Domain.Services
         {
             _strategies = new Dictionary<HedgeStrategyType, IHedgeStrategy>
             {
-                { HedgeStrategyType.CloseCollateralMaxVelocity, new CloseCollateralMaxVelocityHedgeStrategy() },
+                { HedgeStrategyType.ClosePositionMaxVelocity, new ClosePositionMaxVelocityHedgeStrategy() },
                 { HedgeStrategyType.Return, new ReturnHedgeStrategy() },
                 { HedgeStrategyType.None, new NoneHedgeStrategy() },
             };

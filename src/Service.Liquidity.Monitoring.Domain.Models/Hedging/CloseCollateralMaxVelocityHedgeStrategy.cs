@@ -6,9 +6,9 @@ using Service.Liquidity.TradingPortfolio.Domain.Models;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.Hedging
 {
-    public class CloseCollateralMaxVelocityHedgeStrategy : IHedgeStrategy
+    public class ClosePositionMaxVelocityHedgeStrategy : IHedgeStrategy
     {
-        public HedgeStrategyType Type { get; set; } = HedgeStrategyType.CloseCollateralMaxVelocity;
+        public HedgeStrategyType Type { get; set; } = HedgeStrategyType.ClosePositionMaxVelocity;
 
         public HedgeParams CalculateHedgeParams(Portfolio portfolio, IEnumerable<PortfolioCheck> checks,
             HedgeStrategyParams strategyParams)
