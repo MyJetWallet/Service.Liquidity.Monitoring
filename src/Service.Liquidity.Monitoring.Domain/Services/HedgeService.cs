@@ -28,7 +28,6 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             // get balances
             var balancesResp = await _externalMarket.GetBalancesAsync(new GetBalancesRequest());
             var sellAsset = hedgeParams.SellAssets.First();
-            var buyAsset = hedgeParams.BuyAssets.First();
             var targetbalance = balancesResp.Balances
                 .FirstOrDefault(b => b.Symbol == sellAsset.Symbol);
             

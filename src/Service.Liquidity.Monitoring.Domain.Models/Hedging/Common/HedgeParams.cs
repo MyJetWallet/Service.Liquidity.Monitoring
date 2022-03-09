@@ -8,22 +8,17 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging.Common
     [DataContract]
     public class HedgeParams
     {
-        [DataMember(Order = 1)] public List<HedgeAsset> BuyAssets { get; set; } = new List<HedgeAsset>();
+        [DataMember(Order = 1)] public string BuyAssetSymbol { get; set; }
         [DataMember(Order = 2)] public List<HedgeAsset> SellAssets { get; set; } = new List<HedgeAsset>();
-        [DataMember(Order = 3)] public decimal AmountPercent { get; set; }
-
-        public decimal GetAmountInUsd()
-        {
-            return Math.Abs(BuyAssets.Sum(a => a.NetBalanceInUsd)) * (AmountPercent / 100);
-        }
+        [DataMember(Order = 3)] public decimal BuyAmount { get; set; }
 
         public bool Validate(out ICollection<string> errors)
         {
             errors = new List<string>();
 
-            if (!BuyAssets.Any())
+            if (string.IsNullOrWhiteSpace(BuyAssetSymbol))
             {
-                errors.Add($"{nameof(BuyAssets)} are empty");
+                errors.Add($"{nameof(BuyAssetSymbol)} are empty");
             }
 
             if (!SellAssets.Any())
@@ -31,9 +26,9 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging.Common
                 errors.Add($"{nameof(SellAssets)} are empty");
             }
 
-            if (AmountPercent <= 0)
+            if (BuyAmount <= 0)
             {
-                errors.Add($"{nameof(AmountPercent)} must be bigger than 0");
+                errors.Add($"{nameof(BuyAmount)} must be bigger than 0");
             }
 
             return !errors.Any();

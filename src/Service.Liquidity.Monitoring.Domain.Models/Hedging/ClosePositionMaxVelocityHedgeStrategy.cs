@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
 using Service.Liquidity.Monitoring.Domain.Models.Hedging.Common;
@@ -14,20 +15,15 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging
             HedgeStrategyParams strategyParams)
         {
             var selectedAssets = checks.SelectMany(ch => ch.AssetSymbols).ToHashSet();
+            var selectedPositionAssets = portfolio.Assets
+                .Select(a => a.Value)
+                .Where(a => a.GetNegativeNetInUsd() != 0 && selectedAssets.Contains(a.Symbol))
+                .OrderBy(a => a.DailyVelocityRiskInUsd)
+                .ToList();
 
             var hedgeParams = new HedgeParams
             {
-                BuyAssets = portfolio.Assets
-                    .Select(a => a.Value)
-                    .Where(a => a.GetNegativeNetInUsd() != 0 && selectedAssets.Contains(a.Symbol))
-                    .OrderBy(a => a.DailyVelocityRiskInUsd)
-                    .Select(a => new HedgeAsset
-                    {
-                        Weight = a.DailyVelocityRiskInUsd,
-                        Symbol = a.Symbol,
-                        NetBalanceInUsd = a.NetBalanceInUsd
-                    })
-                    .ToList(),
+                BuyAssetSymbol = selectedPositionAssets.FirstOrDefault()?.Symbol,
                 SellAssets = portfolio.Assets
                     .Select(a => a.Value)
                     .Where(a => a.GetPositiveNetInUsd() != 0 && !selectedAssets.Contains(a.Symbol))
@@ -36,10 +32,11 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging
                     {
                         Weight = a.DailyVelocityRiskInUsd,
                         Symbol = a.Symbol,
-                        NetBalanceInUsd = a.NetBalanceInUsd
+                        NetBalance = a.NetBalanceInUsd
                     })
                     .ToList(),
-                AmountPercent = strategyParams.AmountPercent
+                BuyAmount = Math.Abs(selectedPositionAssets.Sum(a => a.NetBalance)) *
+                            (strategyParams.AmountPercent / 100)
             };
 
             return hedgeParams;
