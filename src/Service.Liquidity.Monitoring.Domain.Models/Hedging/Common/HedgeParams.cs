@@ -29,6 +29,11 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging.Common
                 errors.Add($"{nameof(SellAssets)} are empty");
             }
 
+            if (AmountPercent <= 0)
+            {
+                errors.Add($"{nameof(AmountPercent)} must be bigger than 0");
+            }
+
             return !errors.Any();
         }
 
