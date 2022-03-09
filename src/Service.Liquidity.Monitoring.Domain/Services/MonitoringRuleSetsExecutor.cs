@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.ServiceBus;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
-using Service.Liquidity.Monitoring.Domain.Models.Hedging.Common;
 using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
 using Service.Liquidity.TradingPortfolio.Domain.Models;
 
@@ -58,23 +57,21 @@ namespace Service.Liquidity.Monitoring.Domain.Services
 
             foreach (var ruleSet in ruleSets)
             {
-                await ExecuteRuleSetAsync(ruleSet, checksArr, portfolio);
+                await RefreshAndSendNotificationsAsync(ruleSet, checksArr, portfolio);
             }
+
+            await HedgeAsync(ruleSets);
         }
 
-        private async Task ExecuteRuleSetAsync(MonitoringRuleSet ruleSet, PortfolioCheck[] checks, Portfolio portfolio)
+        private async Task RefreshAndSendNotificationsAsync(MonitoringRuleSet ruleSet, PortfolioCheck[] checks,
+            Portfolio portfolio)
         {
             foreach (var rule in ruleSet.Rules)
             {
                 var strategy = _hedgeStrategiesFactory.Get(rule.HedgeStrategyType);
                 rule.RefreshState(portfolio, checks, strategy);
-            }
-            
-            ruleSet.OrderRules();
 
-            foreach (var rule in ruleSet.Rules)
-            {
-                if (rule.IsNeedNotification())
+                if (rule.NeedsNotification())
                 {
                     await _notificationPublisher.PublishAsync(new MonitoringNotificationMessage
                     {
@@ -83,24 +80,33 @@ namespace Service.Liquidity.Monitoring.Domain.Services
                     });
                     rule.SetNotificationSendDate(DateTime.UtcNow);
                 }
-
-                if (rule.HedgeStrategyType == HedgeStrategyType.Return)
-                {
-                    _logger.LogWarning($"RuleSet is skipped. Found Rule {rule.Name} with ReturnStrategy");
-                    return;
-                }
-
-                if (!rule.CurrentState.HedgeParams.Validate(out var errors))
-                {
-                    _logger.LogWarning(
-                        $"Hedging is skipped. Found Rule {rule.Name} with invalid HedgeParams {string.Join(", ", errors)}");
-                    continue;
-                }
-                
-                await _hedgeService.HedgeAsync(rule.CurrentState.HedgeParams);
             }
 
             await _ruleSetsStorage.AddOrUpdateAsync(ruleSet);
+        }
+
+        private async Task HedgeAsync(List<MonitoringRuleSet> ruleSets)
+        {
+            var hightestPriorityRule = ruleSets
+                .Where(rs => rs.NeedsHedging())
+                .SelectMany(rs => rs.Rules)
+                .Where(rule => rule.CurrentState.HedgeParams.Validate(out _))
+                .MaxBy(r => r.CurrentState.HedgeParams.BuyAmount);
+
+            if (hightestPriorityRule == null)
+            {
+                _logger.LogWarning("No rule for hedging");
+                return;
+            }
+
+            if (!hightestPriorityRule.CurrentState.HedgeParams.Validate(out var errors))
+            {
+                _logger.LogWarning(
+                    $"Hedging is skipped. Found Rule {hightestPriorityRule.Name} with invalid HedgeParams {string.Join(", ", errors)}");
+                return;
+            }
+
+            await _hedgeService.HedgeAsync(hightestPriorityRule.CurrentState.HedgeParams);
         }
     }
 }

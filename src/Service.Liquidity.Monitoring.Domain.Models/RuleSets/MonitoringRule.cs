@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using Mapster;
+using Microsoft.AspNetCore.Identity;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
 using Service.Liquidity.Monitoring.Domain.Models.Hedging.Common;
 using Service.Liquidity.Monitoring.Domain.Models.Operators;
@@ -29,7 +30,17 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
             CurrentState.NotificationSendDate = date;
         }
 
-        public bool IsNeedNotification()
+        public bool NeedsHedging()
+        {
+            if (HedgeStrategyType == HedgeStrategyType.None)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool NeedsNotification()
         {
             if (string.IsNullOrWhiteSpace(NotificationChannelId))
             {
