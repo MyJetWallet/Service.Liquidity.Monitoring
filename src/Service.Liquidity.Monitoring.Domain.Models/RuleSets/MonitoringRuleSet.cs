@@ -24,6 +24,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
             {
                 if (rule.HedgeStrategyType == HedgeStrategyType.Return)
                 {
+                    orderedRules.Remove(rule);
                     orderedRules.Insert(0, rule); // return rules is the most prioritized
                 }
             }
