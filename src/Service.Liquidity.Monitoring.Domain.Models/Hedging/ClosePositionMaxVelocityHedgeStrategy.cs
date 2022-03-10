@@ -35,7 +35,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging
                         NetBalance = a.NetBalanceInUsd
                     })
                     .ToList(),
-                BuyAmount = Math.Abs(selectedPositionAssets.Sum(a => a.NetBalance)) *
+                BuyVolume = Math.Abs(selectedPositionAssets.Sum(a => a.NetBalance)) *
                             (strategyParams.AmountPercent / 100)
             };
 

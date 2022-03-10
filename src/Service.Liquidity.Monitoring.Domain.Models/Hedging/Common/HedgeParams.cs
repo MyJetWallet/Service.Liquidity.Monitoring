@@ -10,7 +10,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging.Common
     {
         [DataMember(Order = 1)] public string BuyAssetSymbol { get; set; }
         [DataMember(Order = 2)] public List<HedgeAsset> SellAssets { get; set; } = new List<HedgeAsset>();
-        [DataMember(Order = 3)] public decimal BuyAmount { get; set; }
+        [DataMember(Order = 3)] public decimal BuyVolume { get; set; }
 
         public bool Validate(out ICollection<string> errors)
         {
@@ -26,9 +26,9 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Hedging.Common
                 errors.Add($"{nameof(SellAssets)} are empty");
             }
 
-            if (BuyAmount <= 0)
+            if (BuyVolume <= 0)
             {
-                errors.Add($"{nameof(BuyAmount)} must be bigger than 0");
+                errors.Add($"{nameof(BuyVolume)} must be bigger than 0");
             }
 
             return !errors.Any();

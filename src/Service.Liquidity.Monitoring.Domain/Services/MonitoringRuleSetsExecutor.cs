@@ -91,7 +91,7 @@ namespace Service.Liquidity.Monitoring.Domain.Services
                 .Where(rs => rs.NeedsHedging())
                 .SelectMany(rs => rs.Rules)
                 .Where(rule => rule.CurrentState.HedgeParams.Validate(out _))
-                .MaxBy(r => r.CurrentState.HedgeParams.BuyAmount);
+                .MaxBy(r => r.CurrentState.HedgeParams.BuyVolume);
 
             if (hightestPriorityRule == null)
             {

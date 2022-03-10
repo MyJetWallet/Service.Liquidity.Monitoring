@@ -40,7 +40,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         public void OrderRules()
         {
             var orderedRules = Rules
-                .OrderByDescending(r => r.CurrentState.HedgeParams.BuyAmount)
+                .OrderByDescending(r => r.CurrentState.HedgeParams.BuyVolume)
                 .ToList();
 
             foreach (var rule in Rules)
