@@ -60,7 +60,7 @@ namespace Service.Liquidity.Monitoring.Domain.Services
                 await RefreshAndSendNotificationsAsync(ruleSet, checksArr, portfolio);
             }
 
-            await HedgeAsync(ruleSets);
+            await _hedgeService.HedgeAsync(portfolio, ruleSets);
         }
 
         private async Task RefreshAndSendNotificationsAsync(MonitoringRuleSet ruleSet, PortfolioCheck[] checks,
@@ -83,30 +83,6 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             }
 
             await _ruleSetsStorage.AddOrUpdateAsync(ruleSet);
-        }
-
-        private async Task HedgeAsync(List<MonitoringRuleSet> ruleSets)
-        {
-            var hightestPriorityRule = ruleSets
-                .Where(rs => rs.NeedsHedging())
-                .SelectMany(rs => rs.Rules)
-                .Where(rule => rule.CurrentState.HedgeParams.Validate(out _))
-                .MaxBy(r => r.CurrentState.HedgeParams.BuyVolume);
-
-            if (hightestPriorityRule == null)
-            {
-                _logger.LogWarning("No rule for hedging");
-                return;
-            }
-
-            if (!hightestPriorityRule.CurrentState.HedgeParams.Validate(out var errors))
-            {
-                _logger.LogWarning(
-                    $"Hedging is skipped. Found Rule {hightestPriorityRule.Name} with invalid HedgeParams {string.Join(", ", errors)}");
-                return;
-            }
-
-            await _hedgeService.HedgeAsync(hightestPriorityRule.CurrentState.HedgeParams);
         }
     }
 }
