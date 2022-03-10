@@ -107,11 +107,11 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             await _publisher.PublishAsync(new HedgeTradeMessage
             {
                 BaseAsset = hedgeParams.BuyAssetSymbol,
-                BaseVolume = 0, // hedgeParams.BuyVolume,
-                ExchangeName = ExchangeName,
+                BaseVolume = Convert.ToDecimal(tradeResp.Volume),
+                ExchangeName = tradeRequest.ExchangeName,
                 HedgeStamp = _lastHedgeStamp.Value,
                 QuoteAsset = sellAsset.Symbol,
-                QuoteVolume = Convert.ToDecimal(tradeResp.OppositeVolume),
+                QuoteVolume = Convert.ToDecimal(tradeResp.Price * tradeResp.Volume),
                 Price = Convert.ToDecimal(tradeResp.Price),
                 Id = tradeResp.ReferenceId
             });
