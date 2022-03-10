@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Domain.ExternalMarketApi;
 using MyJetWallet.Domain.ExternalMarketApi.Dto;
+using MyJetWallet.Domain.ExternalMarketApi.Models;
 using MyJetWallet.Domain.Orders;
 using MyJetWallet.Sdk.ServiceBus;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
@@ -93,15 +94,15 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             var tradeRequest = new MarketTradeRequest
             {
                 Side = OrderSide.Buy,
-                Market = $"{hedgeParams.BuyAssetSymbol}{sellAsset.Symbol}",
+                Market = $"{hedgeParams.BuyAssetSymbol}/{sellAsset.Symbol}",
                 Volume = Convert.ToDouble(hedgeParams.BuyVolume),
                 ExchangeName = ExchangeName,
                 OppositeVolume = 0,
                 ReferenceId = null,
             };
-            
-            //var tradeResp = await _externalMarket.MarketTrade(tradeRequest);
-            
+
+            var tradeResp = new ExchangeTrade(); //await _externalMarket.MarketTrade(tradeRequest);
+
             _lastHedgeStamp.Increase();
             await _publisher.PublishAsync(new HedgeTradeMessage
             {
@@ -110,7 +111,9 @@ namespace Service.Liquidity.Monitoring.Domain.Services
                 ExchangeName = ExchangeName,
                 HedgeStamp = _lastHedgeStamp.Value,
                 QuoteAsset = sellAsset.Symbol,
-                QuoteVolume = 0
+                QuoteVolume = Convert.ToDecimal(tradeResp.OppositeVolume),
+                Price = Convert.ToDecimal(tradeResp.Price),
+                Id = tradeResp.ReferenceId
             });
             await _hedgeStampStorage.AddOrUpdateAsync(_lastHedgeStamp);
 
