@@ -66,7 +66,7 @@ namespace Service.Liquidity.Monitoring.Domain.Services
         private async Task RefreshAndSendNotificationsAsync(MonitoringRuleSet ruleSet, PortfolioCheck[] checks,
             Portfolio portfolio)
         {
-            foreach (var rule in ruleSet.Rules)
+            foreach (var rule in ruleSet.Rules ?? Array.Empty<MonitoringRule>())
             {
                 var strategy = _hedgeStrategiesFactory.Get(rule.HedgeStrategyType);
                 rule.RefreshState(portfolio, checks, strategy);
