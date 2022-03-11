@@ -86,7 +86,9 @@ namespace Service.Liquidity.Monitoring.Modules
                 .AsSelf();
             builder.RegisterType<HedgeStampNoSqlStorage>().As<IHedgeStampStorage>().AutoActivate().SingleInstance()
                 .AsSelf();
-
+            builder.RegisterType<CurrentPricesNoSqlCache>().As<ICurrentPricesCache>().As<IStartable>().AutoActivate()
+                .SingleInstance()
+                .AsSelf();
 
             builder.RegisterExternalMarketClient(Program.Settings.ExternalApiGrpcUrl);
         }

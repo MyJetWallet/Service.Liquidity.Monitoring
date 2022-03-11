@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using MyJetWallet.Sdk.NoSql;
+using Service.IndexPrices.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.NoSql.Checks;
 using Service.Liquidity.Monitoring.NoSql.Hedging;
@@ -31,5 +32,8 @@ public class NoSqlModule : Module
         
         builder.RegisterMyNoSqlWriter<HedgeStampNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
             HedgeStampNoSql.TableName);
+        
+        builder.RegisterMyNoSqlReader<CurrentPricesNoSql>(noSqlClient, CurrentPricesNoSql.TableName);
+
     }
 }
