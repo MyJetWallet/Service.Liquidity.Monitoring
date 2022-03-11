@@ -36,23 +36,5 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 
             return true;
         }
-
-        public void OrderRules()
-        {
-            var orderedRules = Rules
-                .OrderByDescending(r => r.CurrentState.HedgeParams.BuyVolume)
-                .ToList();
-
-            foreach (var rule in Rules)
-            {
-                if (rule.HedgeStrategyType == HedgeStrategyType.Return)
-                {
-                    orderedRules.Remove(rule);
-                    orderedRules.Insert(0, rule); // return rules is the most prioritized
-                }
-            }
-
-            Rules = orderedRules;
-        }
     }
 }

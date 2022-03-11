@@ -27,7 +27,7 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             _portfolioMetricsFactory = portfolioMetricsFactory;
         }
 
-        public async Task<IEnumerable<PortfolioCheck>> ExecuteAsync(Portfolio portfolio)
+        public async Task<ICollection<PortfolioCheck>> ExecuteAsync(Portfolio portfolio)
         {
             var checks = (await _portfolioChecksStorage.GetAsync())?.ToList() ?? new List<PortfolioCheck>();
 

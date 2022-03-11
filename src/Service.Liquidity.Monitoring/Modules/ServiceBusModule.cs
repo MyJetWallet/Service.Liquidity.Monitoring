@@ -20,5 +20,7 @@ public class ServiceBusModule : Module
             MonitoringNotificationMessage.SbTopicName, true);
         builder.RegisterMyServiceBusPublisher<HedgeTradeMessage>(serviceBusClient,
             HedgeTradeMessage.SbTopicName, true);
+        builder.RegisterMyServiceBusPublisher<PortfolioMonitoringMessage>(serviceBusClient,
+            PortfolioMonitoringMessage.TopicName, true);
     }
 }

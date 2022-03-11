@@ -7,6 +7,6 @@ namespace Service.Liquidity.Monitoring.Domain.Interfaces;
 
 public interface IPortfolioChecksExecutor
 {
-    public Task<IEnumerable<PortfolioCheck>> ExecuteAsync(Portfolio portfolio);
+    public Task<ICollection<PortfolioCheck>> ExecuteAsync(Portfolio portfolio);
 
 }

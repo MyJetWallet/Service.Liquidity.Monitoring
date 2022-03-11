@@ -37,14 +37,15 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             _hedgeService = hedgeService;
         }
 
-        public async Task ExecuteAsync(Portfolio portfolio, IEnumerable<PortfolioCheck> checks)
+        public async Task<ICollection<MonitoringRuleSet>> ExecuteAsync(Portfolio portfolio,
+            IEnumerable<PortfolioCheck> checks)
         {
             var checksArr = checks?.ToArray() ?? Array.Empty<PortfolioCheck>();
 
             if (!checksArr.Any())
             {
                 _logger.LogWarning("Can't ExecuteRuleSetsAsync. PortfolioChecks not found");
-                return;
+                return Array.Empty<MonitoringRuleSet>();
             }
 
             var ruleSets = _monitoringRuleSetsCache.Get()?.ToList() ?? new List<MonitoringRuleSet>();
@@ -52,7 +53,7 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             if (!ruleSets.Any())
             {
                 _logger.LogWarning("Can't ExecuteRuleSetsAsync. RuleSets not found");
-                return;
+                return Array.Empty<MonitoringRuleSet>();
             }
 
             foreach (var ruleSet in ruleSets)
@@ -61,6 +62,8 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             }
 
             await _hedgeService.HedgeAsync(portfolio, ruleSets);
+
+            return ruleSets;
         }
 
         private async Task RefreshAndSendNotificationsAsync(MonitoringRuleSet ruleSet, PortfolioCheck[] checks,
