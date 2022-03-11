@@ -12,17 +12,17 @@ using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
 
 namespace Service.Liquidity.Monitoring.Jobs
 {
-    public class ExecuteRuleSetsJob : IStartable
+    public class CheckPortfolioJob : IStartable
     {
-        private readonly ILogger<ExecuteRuleSetsJob> _logger;
+        private readonly ILogger<CheckPortfolioJob> _logger;
         private readonly IPortfolioChecksExecutor _portfolioChecksExecutor;
         private readonly IMonitoringRuleSetsExecutor _monitoringRuleSetsExecutor;
         private readonly IMyNoSqlServerDataReader<PortfolioNoSql> _portfolioReader;
         private readonly IServiceBusPublisher<PortfolioMonitoringMessage> _publisher;
         private readonly MyTaskTimer _timer;
 
-        public ExecuteRuleSetsJob(
-            ILogger<ExecuteRuleSetsJob> logger,
+        public CheckPortfolioJob(
+            ILogger<CheckPortfolioJob> logger,
             IPortfolioChecksExecutor portfolioChecksExecutor,
             IMonitoringRuleSetsExecutor monitoringRuleSetsExecutor,
             IMyNoSqlServerDataReader<PortfolioNoSql> portfolioReader,
@@ -34,7 +34,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             _monitoringRuleSetsExecutor = monitoringRuleSetsExecutor;
             _portfolioReader = portfolioReader;
             _publisher = publisher;
-            _timer = new MyTaskTimer(nameof(ExecuteRuleSetsJob),
+            _timer = new MyTaskTimer(nameof(CheckPortfolioJob),
                     TimeSpan.FromMilliseconds(3000),
                     logger,
                     DoAsync)
@@ -54,7 +54,7 @@ namespace Service.Liquidity.Monitoring.Jobs
 
                 if (portfolio == null)
                 {
-                    _logger.LogWarning("Can't ExecuteRuleSetsJob. Portfolio Not found");
+                    _logger.LogWarning($"Can't do {nameof(CheckPortfolioJob)}. Portfolio Not found");
                     return;
                 }
 
@@ -62,7 +62,7 @@ namespace Service.Liquidity.Monitoring.Jobs
 
                 if (checks == null || !checks.Any())
                 {
-                    _logger.LogWarning("Can't ExecuteRuleSetsJob. Checks Not found");
+                    _logger.LogWarning($"Can't do {nameof(CheckPortfolioJob)}. Checks Not found");
                     return;
                 }
 
@@ -70,7 +70,7 @@ namespace Service.Liquidity.Monitoring.Jobs
 
                 if (ruleSets == null || !ruleSets.Any())
                 {
-                    _logger.LogWarning("Can't ExecuteRuleSetsJob. RuleSets Not found");
+                    _logger.LogWarning($"Can't do {nameof(CheckPortfolioJob)}. RuleSets Not found");
                     return;
                 }
 
@@ -83,7 +83,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{job} failed", nameof(ExecuteRuleSetsJob));
+                _logger.LogError(ex, "{job} failed", nameof(CheckPortfolioJob));
             }
         }
     }

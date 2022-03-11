@@ -12,7 +12,6 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 2)] public bool IsActive { get; set; }
         [DataMember(Order = 3)] public IEnumerable<string> ActiveCheckIds { get; set; }
         [DataMember(Order = 4)] public DateTime IsActiveChangedDate { get; set; }
-        [DataMember(Order = 5)] public DateTime? NotificationSendDate { get; set; }
         [DataMember(Order = 6)] public HedgeParams HedgeParams { get; set; }
 
         public static MonitoringRuleState Create(bool isActive,
@@ -25,7 +24,6 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
                 HedgeParams = hedgeParams,
                 IsActive = isActive,
                 ActiveCheckIds = activeCheckIds ?? Array.Empty<string>(),
-                NotificationSendDate = null,
                 IsActiveChangedDate = DateTime.UtcNow,
             };
         }

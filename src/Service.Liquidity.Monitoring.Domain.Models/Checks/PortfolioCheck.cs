@@ -23,31 +23,6 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
         [DataMember(Order = 9)] public PortfolioCheckState PrevState { get; set; }
         [DataMember(Order = 10)] public string Description { get; set; }
 
-        public override string ToString()
-        {
-            const string inactiveSymbol = "\U0001F7E2"; // green circle
-            const string activeSymbol = "\U0001F534"; // red circle
-
-            var title = CurrentState.IsActive
-                ? $"{activeSymbol} Check <b>{Name}</b> is active"
-                : $"{inactiveSymbol} Check <b>{Name}</b> is inactive";
-
-            return $"{title}{Environment.NewLine}" +
-                   $"{MetricType.Humanize()} value: <b>{CurrentState.MetricValue}</b>{Environment.NewLine}" +
-                   $"Target value: <b>{TargetValue}</b>";
-        }
-
-        public string GenerateDescription()
-        {
-            if (string.IsNullOrWhiteSpace(Description))
-            {
-                return ToString();
-            }
-
-            return
-                $"Check {Name} is {(CurrentState.IsActive ? "active" : "inactive")}:{Environment.NewLine}{Description}";
-        }
-
         public void RefreshState(Portfolio portfolio, IPortfolioMetric metric)
         {
             if (metric == null || metric.Type != MetricType)

@@ -25,11 +25,6 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 9)] public string Description { get; set; }
         [DataMember(Order = 10)] public HedgeStrategyParams HedgeStrategyParams { get; set; }
 
-        public void SetNotificationSendDate(DateTime date)
-        {
-            CurrentState.NotificationSendDate = date;
-        }
-
         public bool NeedsHedging()
         {
             if (HedgeStrategyType == HedgeStrategyType.None)
@@ -38,41 +33,6 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
             }
 
             return true;
-        }
-
-        public bool NeedsNotification()
-        {
-            if (string.IsNullOrWhiteSpace(NotificationChannelId))
-            {
-                return false;
-            }
-
-            if (CurrentState.NotificationSendDate == null)
-            {
-                return true;
-            }
-
-            if (CurrentState.IsActive != PrevState.IsActive)
-            {
-                return true;
-            }
-
-            var timeToRemind = DateTime.UtcNow - CurrentState.NotificationSendDate > TimeSpan.FromMinutes(60);
-
-            return CurrentState.IsActive && timeToRemind;
-        }
-
-        public string GetNotificationText(IEnumerable<PortfolioCheck> checks)
-        {
-            var ruleChecks = Filter(checks);
-            var title =
-                $"Rule <b>{Name}</b> is {(CurrentState.IsActive ? "active" : "inactive")}:{Environment.NewLine}{Description}";
-            var checkDescriptions = ruleChecks.Select(ch => ch.GenerateDescription());
-            var body = string.Join($"{Environment.NewLine}", checkDescriptions);
-
-            return $"{title}{Environment.NewLine}" +
-                   $"{body}{Environment.NewLine}{Environment.NewLine}" +
-                   $"Date: {CurrentState.Date:yyyy-MM-dd hh:mm:ss}";
         }
 
         public void RefreshState(Portfolio portfolio, IEnumerable<PortfolioCheck> checks, IHedgeStrategy strategy)
@@ -112,11 +72,6 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
             var ruleChecks = checks
                 .Where(ch => hashSet.Contains(ch.Id))
                 .ToList();
-
-            if (ruleChecks.Count != hashSet.Count)
-            {
-                throw new Exception($"Not all checks found for Rule {Name}");
-            }
 
             return ruleChecks;
         }

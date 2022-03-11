@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using MyJetWallet.Sdk.ServiceBus;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
 using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
@@ -16,7 +15,6 @@ namespace Service.Liquidity.Monitoring.Domain.Services
         private readonly ILogger<MonitoringRuleSetsExecutor> _logger;
         private readonly IMonitoringRuleSetsStorage _ruleSetsStorage;
         private readonly IMonitoringRuleSetsCache _monitoringRuleSetsCache;
-        private readonly IServiceBusPublisher<MonitoringNotificationMessage> _notificationPublisher;
         private readonly IHedgeStrategiesFactory _hedgeStrategiesFactory;
         private readonly IHedgeService _hedgeService;
 
@@ -24,7 +22,6 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             ILogger<MonitoringRuleSetsExecutor> logger,
             IMonitoringRuleSetsStorage ruleSetsStorage,
             IMonitoringRuleSetsCache monitoringRuleSetsCache,
-            IServiceBusPublisher<MonitoringNotificationMessage> notificationPublisher,
             IHedgeStrategiesFactory hedgeStrategiesFactory,
             IHedgeService hedgeService
         )
@@ -32,7 +29,6 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             _logger = logger;
             _ruleSetsStorage = ruleSetsStorage;
             _monitoringRuleSetsCache = monitoringRuleSetsCache;
-            _notificationPublisher = notificationPublisher;
             _hedgeStrategiesFactory = hedgeStrategiesFactory;
             _hedgeService = hedgeService;
         }
@@ -58,7 +54,7 @@ namespace Service.Liquidity.Monitoring.Domain.Services
 
             foreach (var ruleSet in ruleSets)
             {
-                await RefreshAndSendNotificationsAsync(ruleSet, checksArr, portfolio);
+                await RefreshStateAsync(ruleSet, checksArr, portfolio);
             }
 
             await _hedgeService.HedgeAsync(portfolio, ruleSets);
@@ -66,23 +62,13 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             return ruleSets;
         }
 
-        private async Task RefreshAndSendNotificationsAsync(MonitoringRuleSet ruleSet, PortfolioCheck[] checks,
+        private async Task RefreshStateAsync(MonitoringRuleSet ruleSet, PortfolioCheck[] checks,
             Portfolio portfolio)
         {
             foreach (var rule in ruleSet.Rules ?? Array.Empty<MonitoringRule>())
             {
                 var strategy = _hedgeStrategiesFactory.Get(rule.HedgeStrategyType);
                 rule.RefreshState(portfolio, checks, strategy);
-
-                if (rule.NeedsNotification())
-                {
-                    await _notificationPublisher.PublishAsync(new MonitoringNotificationMessage
-                    {
-                        ChannelId = rule.NotificationChannelId,
-                        Text = rule.GetNotificationText(checks)
-                    });
-                    rule.SetNotificationSendDate(DateTime.UtcNow);
-                }
             }
 
             await _ruleSetsStorage.AddOrUpdateAsync(ruleSet);
