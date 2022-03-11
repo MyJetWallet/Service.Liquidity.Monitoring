@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using Mapster;
-using Microsoft.AspNetCore.Identity;
+using Service.Liquidity.Hedger.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
-using Service.Liquidity.Monitoring.Domain.Models.Hedging.Common;
 using Service.Liquidity.Monitoring.Domain.Models.Operators;
-using Service.Liquidity.TradingPortfolio.Domain.Models;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 {
@@ -25,17 +23,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 9)] public string Description { get; set; }
         [DataMember(Order = 10)] public HedgeStrategyParams HedgeStrategyParams { get; set; }
 
-        public bool NeedsHedging()
-        {
-            if (HedgeStrategyType == HedgeStrategyType.None)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public void RefreshState(Portfolio portfolio, IEnumerable<PortfolioCheck> checks, IHedgeStrategy strategy)
+        public void RefreshState(IEnumerable<PortfolioCheck> checks)
         {
             PrevState = CurrentState.Adapt<MonitoringRuleState>();
             var ruleChecks = Filter(checks).ToArray();
@@ -49,20 +37,14 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
             var activeCheckIds = ruleChecks
                 .Where(ch => ch.CurrentState.IsActive)
                 .Select(ch => ch.Id);
-            var hedgeParams = new HedgeParams();
-            
-            if (isActive)
-            {
-                hedgeParams = strategy.CalculateHedgeParams(portfolio, ruleChecks, HedgeStrategyParams);
-            }
 
             if (CurrentState == null)
             {
-                CurrentState = MonitoringRuleState.Create(isActive, hedgeParams, activeCheckIds);
+                CurrentState = MonitoringRuleState.Create(isActive, activeCheckIds);
             }
             else
             {
-                CurrentState.Refresh(isActive, hedgeParams, activeCheckIds);
+                CurrentState.Refresh(isActive, activeCheckIds);
             }
         }
 

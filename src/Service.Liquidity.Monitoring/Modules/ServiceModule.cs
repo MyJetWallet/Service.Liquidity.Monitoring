@@ -4,7 +4,6 @@ using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Jobs;
 using Service.Liquidity.Monitoring.NoSql.Checks;
-using Service.Liquidity.Monitoring.NoSql.Hedging;
 using Service.Liquidity.Monitoring.NoSql.RuleSets;
 using Service.Liquidity.Monitoring.Services;
 
@@ -61,12 +60,6 @@ namespace Service.Liquidity.Monitoring.Modules
                 .SingleInstance()
                 .AsSelf();
             builder
-                .RegisterType<HedgeStrategiesFactory>()
-                .As<IHedgeStrategiesFactory>()
-                .AutoActivate()
-                .SingleInstance()
-                .AsSelf();
-            builder
                 .RegisterType<MonitoringRuleSetsExecutor>()
                 .As<IMonitoringRuleSetsExecutor>()
                 .AutoActivate()
@@ -76,17 +69,6 @@ namespace Service.Liquidity.Monitoring.Modules
                 .RegisterType<PortfolioChecksExecutor>()
                 .As<IPortfolioChecksExecutor>()
                 .AutoActivate()
-                .SingleInstance()
-                .AsSelf();
-            builder
-                .RegisterType<HedgeService>()
-                .As<IHedgeService>()
-                .AutoActivate()
-                .SingleInstance()
-                .AsSelf();
-            builder.RegisterType<HedgeStampNoSqlStorage>().As<IHedgeStampStorage>().AutoActivate().SingleInstance()
-                .AsSelf();
-            builder.RegisterType<CurrentPricesNoSqlCache>().As<ICurrentPricesCache>().As<IStartable>().AutoActivate()
                 .SingleInstance()
                 .AsSelf();
 

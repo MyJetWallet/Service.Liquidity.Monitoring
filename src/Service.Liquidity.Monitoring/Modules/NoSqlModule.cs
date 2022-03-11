@@ -3,7 +3,6 @@ using MyJetWallet.Sdk.NoSql;
 using Service.IndexPrices.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.NoSql.Checks;
-using Service.Liquidity.Monitoring.NoSql.Hedging;
 using Service.Liquidity.Monitoring.NoSql.RuleSets;
 using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
 
@@ -29,11 +28,5 @@ public class NoSqlModule : Module
         builder.RegisterMyNoSqlWriter<MonitoringRuleSetNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
             MonitoringRuleSetNoSql.TableName);
         builder.RegisterMyNoSqlReader<MonitoringRuleSetNoSql>(noSqlClient, MonitoringRuleSetNoSql.TableName);
-        
-        builder.RegisterMyNoSqlWriter<HedgeStampNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
-            HedgeStampNoSql.TableName);
-        
-        builder.RegisterMyNoSqlReader<CurrentPricesNoSql>(noSqlClient, CurrentPricesNoSql.TableName);
-
     }
 }
