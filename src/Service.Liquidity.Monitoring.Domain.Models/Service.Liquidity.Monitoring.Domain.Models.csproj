@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Humanizer" Version="2.14.1" />
     <PackageReference Include="Mapster" Version="7.3.0" />
     <PackageReference Include="MyJetWallet.Service.Liquidity.Hedger.Client" Version="1.0.0" />
     <PackageReference Include="MyJetWallet.Service.Liquidity.TradingPortfolio.Client" Version="1.8.3" />
