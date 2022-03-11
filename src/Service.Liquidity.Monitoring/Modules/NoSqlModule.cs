@@ -3,6 +3,7 @@ using MyJetWallet.Sdk.NoSql;
 using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.NoSql.Checks;
 using Service.Liquidity.Monitoring.NoSql.RuleSets;
+using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
 
 namespace Service.Liquidity.Monitoring.Modules;
 
@@ -14,7 +15,8 @@ public class NoSqlModule : Module
         
         builder.RegisterMyNoSqlWriter<AssetPortfolioSettingsNoSql>(
             Program.ReloadedSettings(e => e.MyNoSqlWriterUrl), AssetPortfolioSettingsNoSql.TableName);
-        
+        builder.RegisterMyNoSqlReader<PortfolioNoSql>(noSqlClient, PortfolioNoSql.TableName);
+
         builder.RegisterMyNoSqlWriter<AssetPortfolioStatusNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
             AssetPortfolioStatusNoSql.TableName);
 
