@@ -5,10 +5,9 @@ using Autofac;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service.Tools;
 using MyJetWallet.Sdk.ServiceBus;
-using MyNoSqlServer.Abstractions;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Models;
-using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
+using Service.Liquidity.TradingPortfolio.Grpc;
 
 namespace Service.Liquidity.Monitoring.Jobs
 {
@@ -17,23 +16,23 @@ namespace Service.Liquidity.Monitoring.Jobs
         private readonly ILogger<CheckPortfolioJob> _logger;
         private readonly IPortfolioChecksExecutor _portfolioChecksExecutor;
         private readonly IMonitoringRuleSetsExecutor _monitoringRuleSetsExecutor;
-        private readonly IMyNoSqlServerDataReader<PortfolioNoSql> _portfolioReader;
         private readonly IServiceBusPublisher<PortfolioMonitoringMessage> _publisher;
+        private readonly IManualInputService _portfolioService;
         private readonly MyTaskTimer _timer;
 
         public CheckPortfolioJob(
             ILogger<CheckPortfolioJob> logger,
             IPortfolioChecksExecutor portfolioChecksExecutor,
             IMonitoringRuleSetsExecutor monitoringRuleSetsExecutor,
-            IMyNoSqlServerDataReader<PortfolioNoSql> portfolioReader,
-            IServiceBusPublisher<PortfolioMonitoringMessage> publisher
+            IServiceBusPublisher<PortfolioMonitoringMessage> publisher,
+            IManualInputService portfolioService
         )
         {
             _logger = logger;
             _portfolioChecksExecutor = portfolioChecksExecutor;
             _monitoringRuleSetsExecutor = monitoringRuleSetsExecutor;
-            _portfolioReader = portfolioReader;
             _publisher = publisher;
+            _portfolioService = portfolioService;
             _timer = new MyTaskTimer(nameof(CheckPortfolioJob),
                     TimeSpan.FromMilliseconds(3000),
                     logger,
@@ -50,15 +49,15 @@ namespace Service.Liquidity.Monitoring.Jobs
         {
             try
             {
-                var portfolio = _portfolioReader.Get().FirstOrDefault()?.Portfolio;
+                var portfolioResp = await _portfolioService.GetPortfolioAsync();
 
-                if (portfolio == null)
+                if (portfolioResp?.Portfolio == null)
                 {
                     _logger.LogWarning($"Can't do {nameof(CheckPortfolioJob)}. Portfolio Not found");
                     return;
                 }
 
-                var checks = await _portfolioChecksExecutor.ExecuteAsync(portfolio);
+                var checks = await _portfolioChecksExecutor.ExecuteAsync(portfolioResp.Portfolio);
 
                 if (checks == null || !checks.Any())
                 {
@@ -66,7 +65,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                     return;
                 }
 
-                var ruleSets = await _monitoringRuleSetsExecutor.ExecuteAsync(portfolio, checks);
+                var ruleSets = await _monitoringRuleSetsExecutor.ExecuteAsync(portfolioResp.Portfolio, checks);
 
                 if (ruleSets == null || !ruleSets.Any())
                 {
@@ -76,7 +75,7 @@ namespace Service.Liquidity.Monitoring.Jobs
 
                 await _publisher.PublishAsync(new PortfolioMonitoringMessage
                 {
-                    Portfolio = portfolio,
+                    Portfolio = portfolioResp.Portfolio,
                     Checks = checks,
                     RuleSets = ruleSets
                 });

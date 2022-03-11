@@ -1,10 +1,8 @@
 ﻿using Autofac;
 using MyJetWallet.Sdk.NoSql;
-using Service.IndexPrices.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.NoSql.Checks;
 using Service.Liquidity.Monitoring.NoSql.RuleSets;
-using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
 
 namespace Service.Liquidity.Monitoring.Modules;
 
@@ -19,9 +17,7 @@ public class NoSqlModule : Module
         
         builder.RegisterMyNoSqlWriter<AssetPortfolioStatusNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
             AssetPortfolioStatusNoSql.TableName);
-        
-        builder.RegisterMyNoSqlReader<PortfolioNoSql>(noSqlClient, PortfolioNoSql.TableName);
-        
+
         builder.RegisterMyNoSqlWriter<PortfolioCheckNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
             PortfolioCheckNoSql.TableName);
         

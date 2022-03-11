@@ -1,10 +1,12 @@
 ﻿using Autofac;
+using OpenTelemetry.Context.Propagation;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Jobs;
 using Service.Liquidity.Monitoring.NoSql.Checks;
 using Service.Liquidity.Monitoring.NoSql.RuleSets;
 using Service.Liquidity.Monitoring.Services;
+using Service.Liquidity.TradingPortfolio.Client;
 
 namespace Service.Liquidity.Monitoring.Modules
 {
@@ -12,6 +14,8 @@ namespace Service.Liquidity.Monitoring.Modules
     {
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterLiquidityTradingPortfolioClient(Program.Settings.LiquidityTradingPortfolioServiceUrl);
+            
             builder
                 .RegisterType<AssetPortfolioSettingsStorage>()
                 .As<IAssetPortfolioSettingsStorage>()

@@ -23,7 +23,7 @@ namespace Service.Liquidity.Monitoring.Settings
         [YamlProperty("LiquidityMonitoring.SpotServiceBusHostPort")]
         public string SpotServiceBusHostPort { get; set; }
 
-        [YamlProperty("LiquidityMonitoring.ExternalApiGrpcUrl")]
-        public string ExternalApiGrpcUrl { get; set; }
+        [YamlProperty("LiquidityMonitoring.LiquidityTradingPortfolioServiceUrl")]
+        public string LiquidityTradingPortfolioServiceUrl { get; set; }
     }
 }
