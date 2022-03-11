@@ -13,7 +13,7 @@ public class ServiceBusModule : Module
         var serviceBusClient = builder.RegisterMyServiceBusTcpClient(
             Program.ReloadedSettings(e => e.SpotServiceBusHostPort),
             Program.LogFactory);
-        
+
         builder.RegisterMyServiceBusPublisher<AssetPortfolioStatusMessage>(serviceBusClient,
             AssetPortfolioStatusMessage.TopicName, true);
         builder.RegisterMyServiceBusPublisher<MonitoringNotificationMessage>(serviceBusClient,
@@ -21,6 +21,6 @@ public class ServiceBusModule : Module
         builder.RegisterMyServiceBusPublisher<HedgeTradeMessage>(serviceBusClient,
             HedgeTradeMessage.SbTopicName, true);
         builder.RegisterMyServiceBusPublisher<PortfolioMonitoringMessage>(serviceBusClient,
-            PortfolioMonitoringMessage.TopicName, true);
+            PortfolioMonitoringMessage.TopicName, false);
     }
 }
