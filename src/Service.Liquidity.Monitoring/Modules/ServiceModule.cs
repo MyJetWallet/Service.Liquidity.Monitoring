@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using MyJetWallet.Domain.ExternalMarketApi;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Jobs;
@@ -71,8 +70,6 @@ namespace Service.Liquidity.Monitoring.Modules
                 .AutoActivate()
                 .SingleInstance()
                 .AsSelf();
-
-            builder.RegisterExternalMarketClient(Program.Settings.ExternalApiGrpcUrl);
         }
     }
 }
