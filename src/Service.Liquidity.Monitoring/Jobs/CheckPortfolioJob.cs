@@ -20,7 +20,6 @@ namespace Service.Liquidity.Monitoring.Jobs
         private readonly IMonitoringRuleSetsExecutor _monitoringRuleSetsExecutor;
         private readonly IServiceBusPublisher<PortfolioMonitoringMessage> _publisher;
         private readonly IManualInputService _portfolioService;
-        private readonly IMyNoSqlServerDataReader<PortfolioNoSql> _myNoSqlServerDataReader;
         private readonly MyTaskTimer _timer;
 
         public CheckPortfolioJob(
@@ -28,8 +27,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             IPortfolioChecksExecutor portfolioChecksExecutor,
             IMonitoringRuleSetsExecutor monitoringRuleSetsExecutor,
             IServiceBusPublisher<PortfolioMonitoringMessage> publisher,
-            IManualInputService portfolioService,
-            IMyNoSqlServerDataReader<PortfolioNoSql> myNoSqlServerDataReader
+            IManualInputService portfolioService
         )
         {
             _logger = logger;
@@ -37,7 +35,6 @@ namespace Service.Liquidity.Monitoring.Jobs
             _monitoringRuleSetsExecutor = monitoringRuleSetsExecutor;
             _publisher = publisher;
             _portfolioService = portfolioService;
-            _myNoSqlServerDataReader = myNoSqlServerDataReader;
             _timer = new MyTaskTimer(nameof(CheckPortfolioJob),
                     TimeSpan.FromMilliseconds(3000),
                     logger,
@@ -54,7 +51,7 @@ namespace Service.Liquidity.Monitoring.Jobs
         {
             try
             {
-                var portfolio = _myNoSqlServerDataReader.Get().FirstOrDefault()?.Portfolio;
+                var portfolio = (await _portfolioService.GetPortfolioAsync()).Portfolio;
 
                 if (portfolio == null)
                 {
