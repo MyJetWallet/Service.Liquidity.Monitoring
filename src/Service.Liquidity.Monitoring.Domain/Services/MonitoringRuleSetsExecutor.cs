@@ -34,7 +34,6 @@ namespace Service.Liquidity.Monitoring.Domain.Services
 
             if (!checksArr.Any())
             {
-                _logger.LogWarning("Can't ExecuteRuleSetsAsync. PortfolioChecks not found");
                 return Array.Empty<MonitoringRuleSet>();
             }
 
@@ -42,7 +41,6 @@ namespace Service.Liquidity.Monitoring.Domain.Services
 
             if (!ruleSets.Any())
             {
-                _logger.LogWarning("Can't ExecuteRuleSetsAsync. RuleSets not found");
                 return Array.Empty<MonitoringRuleSet>();
             }
 

@@ -66,7 +66,6 @@ namespace Service.Liquidity.Monitoring.Jobs
 
                 if (checks == null || !checks.Any())
                 {
-                    _logger.LogWarning($"Can't do {nameof(CheckPortfolioJob)}. Checks Not found");
                     return;
                 }
 
@@ -74,7 +73,6 @@ namespace Service.Liquidity.Monitoring.Jobs
 
                 if (ruleSets == null || !ruleSets.Any())
                 {
-                    _logger.LogWarning($"Can't do {nameof(CheckPortfolioJob)}. RuleSets Not found");
                     return;
                 }
 

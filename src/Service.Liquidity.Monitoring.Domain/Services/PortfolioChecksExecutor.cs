@@ -33,8 +33,6 @@ namespace Service.Liquidity.Monitoring.Domain.Services
 
             if (!checks.Any())
             {
-                _logger.LogWarning("Can't ExecutePortfolioChecks. Checks Not Found");
-
                 return ArraySegment<PortfolioCheck>.Empty;
             }
 
