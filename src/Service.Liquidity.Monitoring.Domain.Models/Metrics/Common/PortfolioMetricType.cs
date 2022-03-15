@@ -6,7 +6,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Metrics.Common
         CollateralUsd,
         DailyVelocityUsd,
         DailyVelocityPercent,
-        PnlUsd,
+        NetUsd,
         PositionUsd,
         PositionPercent
     }

@@ -16,7 +16,7 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             {
                 { PortfolioMetricType.CollateralPercent, new CollateralPercentPortfolioMetric() },
                 { PortfolioMetricType.CollateralUsd, new CollateralUsdPortfolioMetric() },
-                { PortfolioMetricType.PnlUsd, new PnlUsdPortfolioMetric() },
+                { PortfolioMetricType.NetUsd, new NetUsdPortfolioMetric() },
                 { PortfolioMetricType.PositionPercent, new PositionPercentPortfolioMetric() },
                 { PortfolioMetricType.PositionUsd, new PositionUsdPortfolioMetric() },
                 { PortfolioMetricType.DailyVelocityPercent, new DailyVelocityPercentPortfolioMetric() },

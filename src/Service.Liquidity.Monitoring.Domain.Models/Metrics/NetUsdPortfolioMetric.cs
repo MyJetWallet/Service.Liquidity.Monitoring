@@ -4,9 +4,9 @@ using Service.Liquidity.TradingPortfolio.Domain.Models;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.Metrics
 {
-    public class PnlUsdPortfolioMetric : IPortfolioMetric
+    public class NetUsdPortfolioMetric : IPortfolioMetric
     {
-        public PortfolioMetricType Type { get; set; } = PortfolioMetricType.PnlUsd;
+        public PortfolioMetricType Type { get; set; } = PortfolioMetricType.NetUsd;
 
         public decimal Calculate(Portfolio portfolio, PortfolioMetricParams portfolioMetricParams)
         {
