@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <PackageReference Include="Mapster" Version="7.3.0" />
-    <PackageReference Include="MyJetWallet.Service.Liquidity.Hedger.Client" Version="1.0.1" />
     <PackageReference Include="MyJetWallet.Service.Liquidity.TradingPortfolio.Client" Version="1.8.6" />
   </ItemGroup>
 
