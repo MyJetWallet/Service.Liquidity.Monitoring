@@ -25,7 +25,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         public void RefreshState(IEnumerable<PortfolioCheck> checks)
         {
             PrevState = CurrentState.Adapt<MonitoringRuleState>();
-            var ruleChecks = Filter(checks);
+            var ruleChecks = Filter(checks ?? new List<PortfolioCheck>());
             
             var isActive = LogicalOperatorType switch
             {

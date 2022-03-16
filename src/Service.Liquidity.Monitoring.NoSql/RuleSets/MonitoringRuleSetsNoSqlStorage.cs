@@ -45,7 +45,7 @@ namespace Service.Liquidity.Monitoring.NoSql.RuleSets
         {
             var models = await _myNoSqlServerDataWriter.GetAsync();
 
-            return models.Select(m => m.Value);
+            return models?.Select(m => m.Value) ?? new List<MonitoringRuleSet>();
         }
 
         public async Task<MonitoringRuleSet> GetAsync(string id)
@@ -53,7 +53,7 @@ namespace Service.Liquidity.Monitoring.NoSql.RuleSets
             var model = await _myNoSqlServerDataWriter.GetAsync(MonitoringRuleSetNoSql.GeneratePartitionKey(),
                 MonitoringRuleSetNoSql.GenerateRowKey(id));
 
-            return model.Value;
+            return model?.Value;
         }
 
         public async Task DeleteAsync(string id)
