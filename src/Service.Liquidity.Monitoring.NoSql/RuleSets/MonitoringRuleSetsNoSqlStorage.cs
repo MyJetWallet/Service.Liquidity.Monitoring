@@ -7,7 +7,6 @@ namespace Service.Liquidity.Monitoring.NoSql.RuleSets
     public class MonitoringRuleSetsNoSqlStorage : IMonitoringRuleSetsStorage
     {
         private readonly IMyNoSqlServerDataWriter<MonitoringRuleSetNoSql> _myNoSqlServerDataWriter;
-        private Dictionary<string, MonitoringRuleSet> _ruleSetsCache = new ();
         
         public MonitoringRuleSetsNoSqlStorage(
             IMyNoSqlServerDataWriter<MonitoringRuleSetNoSql> myNoSqlServerDataWriter
@@ -15,12 +14,31 @@ namespace Service.Liquidity.Monitoring.NoSql.RuleSets
         {
             _myNoSqlServerDataWriter = myNoSqlServerDataWriter;
         }
+        
+        public async Task UpdateRuleStatesAsync(MonitoringRuleSet model)
+        {
+            var dbModel = await GetAsync(model.Id);
+
+            if (dbModel?.Rules == null)
+            {
+                return;
+            }
+
+            foreach (var dbRule in dbModel.Rules)
+            {
+                var updatedRule = model.Rules.FirstOrDefault(r => r.Id == dbRule.Id);
+                dbRule.CurrentState = updatedRule?.CurrentState;
+                dbRule.PrevState = updatedRule?.PrevState;
+            }
+            
+            var nosqlModel = MonitoringRuleSetNoSql.Create(dbModel);
+            await _myNoSqlServerDataWriter.InsertOrReplaceAsync(nosqlModel);
+        }
 
         public async Task AddOrUpdateAsync(MonitoringRuleSet model)
         {
             var nosqlModel = MonitoringRuleSetNoSql.Create(model);
             await _myNoSqlServerDataWriter.InsertOrReplaceAsync(nosqlModel);
-            _ruleSetsCache[model.Id] = model;
         }
 
         public async Task<IEnumerable<MonitoringRuleSet>> GetAsync()

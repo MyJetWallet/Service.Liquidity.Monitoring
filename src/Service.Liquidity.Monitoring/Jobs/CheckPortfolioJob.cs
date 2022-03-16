@@ -36,7 +36,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             _publisher = publisher;
             _portfolioService = portfolioService;
             _timer = new MyTaskTimer(nameof(CheckPortfolioJob),
-                    TimeSpan.FromMilliseconds(3000),
+                    TimeSpan.FromMilliseconds(5000),
                     logger,
                     DoAsync)
                 .DisableTelemetry();

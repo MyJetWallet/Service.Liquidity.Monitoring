@@ -10,5 +10,6 @@ namespace Service.Liquidity.Monitoring.Domain.Interfaces
         Task AddOrUpdateAsync(MonitoringRuleSet model);
         Task<MonitoringRuleSet> GetAsync(string id);
         Task DeleteAsync(string id);
+        Task UpdateRuleStatesAsync(MonitoringRuleSet model);
     }
 }

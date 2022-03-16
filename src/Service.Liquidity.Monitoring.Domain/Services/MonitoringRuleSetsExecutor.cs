@@ -59,7 +59,7 @@ namespace Service.Liquidity.Monitoring.Domain.Services
                 rule.RefreshState(checks);
             }
 
-            await _ruleSetsStorage.AddOrUpdateAsync(ruleSet);
+            await _ruleSetsStorage.UpdateRuleStatesAsync(ruleSet);
         }
     }
 }
