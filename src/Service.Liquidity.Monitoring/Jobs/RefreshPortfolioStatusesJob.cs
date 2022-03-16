@@ -12,6 +12,7 @@ using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.TradingPortfolio.Domain.Models;
 using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
+using Service.Liquidity.TradingPortfolio.Grpc;
 
 namespace Service.Liquidity.Monitoring.Jobs
 {
@@ -23,6 +24,7 @@ namespace Service.Liquidity.Monitoring.Jobs
         private readonly IAssetPortfolioStatusStorage _assetPortfolioStatusStorage;
         private readonly MyTaskTimer _operationsTimer;
         private IServiceBusPublisher<AssetPortfolioStatusMessage> _assetPortfolioStatusPublisher;
+        private readonly IManualInputService _portfolioService;
 
         private static readonly TimeSpan DefaultMonitorTimer = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan DefaultLastAlarmEventTimeSpan = TimeSpan.FromMinutes(60);
@@ -33,13 +35,16 @@ namespace Service.Liquidity.Monitoring.Jobs
             ILogger<RefreshPortfolioStatusesJob> logger,
             IAssetPortfolioSettingsStorage assetPortfolioSettingsStorage,
             IAssetPortfolioStatusStorage assetPortfolioStatusStorage, 
-            IServiceBusPublisher<AssetPortfolioStatusMessage> assetPortfolioStatusPublisher)
+            IServiceBusPublisher<AssetPortfolioStatusMessage> assetPortfolioStatusPublisher,
+            IManualInputService portfolioService
+        )
         {
             _myNoSqlServerDataReader = myNoSqlServerDataReader;
             _logger = logger;
             _assetPortfolioSettingsStorage = assetPortfolioSettingsStorage;
             _assetPortfolioStatusStorage = assetPortfolioStatusStorage;
             _assetPortfolioStatusPublisher = assetPortfolioStatusPublisher;
+            _portfolioService = portfolioService;
             _operationsTimer = new MyTaskTimer(nameof(RefreshPortfolioStatusesJob), 
                 DefaultMonitorTimer, logger, DoAsync);
         }
@@ -55,7 +60,7 @@ namespace Service.Liquidity.Monitoring.Jobs
 
         private async Task DoAsync()
         {
-            var portfolio = _myNoSqlServerDataReader.Get().FirstOrDefault();
+            var portfolio = await _portfolioService.GetPortfolioAsync();
             await RefreshStatuses(portfolio?.Portfolio);
         }
 
