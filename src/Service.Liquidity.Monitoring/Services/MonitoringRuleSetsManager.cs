@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Grpc;
@@ -20,24 +21,24 @@ namespace Service.Liquidity.Monitoring.Services
             _monitoringRuleSetsCache = monitoringRuleSetsCache;
         }
 
-        public Task<GetMonitoringRuleSetListResponse> GetListAsync(GetMonitoringRuleSetListRequest request)
+        public async Task<GetMonitoringRuleSetListResponse> GetListAsync(GetMonitoringRuleSetListRequest request)
         {
             try
             {
-                var items = _monitoringRuleSetsCache.Get();
+                var items = await _monitoringRuleSetsStorage.GetAsync();
 
-                return Task.FromResult(new GetMonitoringRuleSetListResponse
+                return new GetMonitoringRuleSetListResponse
                 {
-                    Items = items
-                });
+                    Items = items.ToList()
+                };
             }
             catch (Exception ex)
             {
-                return Task.FromResult(new GetMonitoringRuleSetListResponse
+                return new GetMonitoringRuleSetListResponse
                 {
                     IsError = true,
                     ErrorMessage = ex.Message
-                });
+                };
             }
         }
 
