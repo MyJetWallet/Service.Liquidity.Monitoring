@@ -49,10 +49,10 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
 
         private List<PortfolioCheck> Filter(IEnumerable<PortfolioCheck> checks)
         {
-            var hashSet = CheckIds.ToHashSet();
-            var ruleChecks = checks
+            var hashSet = CheckIds?.ToHashSet() ?? new HashSet<string>();
+            var ruleChecks = checks?
                 .Where(ch => hashSet.Contains(ch.Id))
-                .ToList();
+                .ToList() ?? new List<PortfolioCheck>();
 
             return ruleChecks;
         }
