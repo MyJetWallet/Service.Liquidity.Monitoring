@@ -36,18 +36,9 @@ namespace Service.Liquidity.Monitoring.Domain.Services
                 return ArraySegment<PortfolioCheck>.Empty;
             }
 
-            var metrics = _portfolioMetricsFactory.Get()?.ToList() ?? new List<IPortfolioMetric>();
-
-            if (!metrics.Any())
-            {
-                _logger.LogWarning("Can't ExecutePortfolioChecks. Metrics Not Found");
-
-                return ArraySegment<PortfolioCheck>.Empty;
-            }
-
             foreach (var check in checks)
             {
-                check.RefreshState(portfolio, metrics.FirstOrDefault(m => m.Type == check.MetricType));
+                check.RefreshState(portfolio, _portfolioMetricsFactory.Get(check.MetricType));
             }
 
             await _portfolioChecksStorage.BulkInsetOrUpdateAsync(checks);
