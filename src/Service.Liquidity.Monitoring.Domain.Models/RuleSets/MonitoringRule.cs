@@ -20,13 +20,21 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 6)] public MonitoringRuleState PrevState { get; set; }
         [DataMember(Order = 7)] public MonitoringRuleState CurrentState { get; set; }
         [DataMember(Order = 9)] public string Description { get; set; }
-        [DataMember(Order = 10)] public HedgeStrategyParams HedgeStrategyParams { get; set; }
+        [DataMember(Order = 11)] public IEnumerable<PortfolioCheck> Checks { get; set; }
+        [DataMember(Order = 12)] public string Category { get; set; }
+        [DataMember(Order = 13)] public Dictionary<string, CustomParam> ParamsByName { get; set; }
+        [DataMember(Order = 14)] public string MonitoringRuleSetId { get; set; }
+
+        public void RefreshState()
+        {
+            RefreshState(Checks);
+        }
 
         public void RefreshState(IEnumerable<PortfolioCheck> checks)
         {
             PrevState = CurrentState.Adapt<MonitoringRuleState>();
             var ruleChecks = Filter(checks ?? new List<PortfolioCheck>());
-            
+
             var isActive = LogicalOperatorType switch
             {
                 LogicalOperatorType.All => ruleChecks.All(ch => ch.CurrentState.IsActive),

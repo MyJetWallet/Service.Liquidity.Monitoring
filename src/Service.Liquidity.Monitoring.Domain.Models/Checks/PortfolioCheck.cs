@@ -21,6 +21,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Checks
         [DataMember(Order = 8)] public PortfolioCheckState CurrentState { get; set; }
         [DataMember(Order = 9)] public PortfolioCheckState PrevState { get; set; }
         [DataMember(Order = 10)] public string Description { get; set; }
+        [DataMember(Order = 11)] public string MonitoringRuleId { get; set; }
 
         public void RefreshState(Portfolio portfolio, IPortfolioMetric metric)
         {

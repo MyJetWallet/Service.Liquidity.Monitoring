@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service.Tools;
 using MyJetWallet.Sdk.ServiceBus;
-using MyNoSqlServer.Abstractions;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Models;
-using Service.Liquidity.TradingPortfolio.Domain.Models.NoSql;
+using Service.Liquidity.Monitoring.Domain.Models.Checks;
+using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
 using Service.Liquidity.TradingPortfolio.Grpc;
 
 namespace Service.Liquidity.Monitoring.Jobs
@@ -20,6 +21,8 @@ namespace Service.Liquidity.Monitoring.Jobs
         private readonly IMonitoringRuleSetsExecutor _monitoringRuleSetsExecutor;
         private readonly IServiceBusPublisher<PortfolioMonitoringMessage> _publisher;
         private readonly IManualInputService _portfolioService;
+        private readonly IMonitoringRulesStorage _monitoringRulesStorage;
+        private readonly IPortfolioMetricsFactory _portfolioMetricsFactory;
         private readonly MyTaskTimer _timer;
 
         public CheckPortfolioJob(
@@ -27,7 +30,9 @@ namespace Service.Liquidity.Monitoring.Jobs
             IPortfolioChecksExecutor portfolioChecksExecutor,
             IMonitoringRuleSetsExecutor monitoringRuleSetsExecutor,
             IServiceBusPublisher<PortfolioMonitoringMessage> publisher,
-            IManualInputService portfolioService
+            IManualInputService portfolioService,
+            IMonitoringRulesStorage monitoringRulesStorage,
+            IPortfolioMetricsFactory portfolioMetricsFactory
         )
         {
             _logger = logger;
@@ -35,6 +40,8 @@ namespace Service.Liquidity.Monitoring.Jobs
             _monitoringRuleSetsExecutor = monitoringRuleSetsExecutor;
             _publisher = publisher;
             _portfolioService = portfolioService;
+            _monitoringRulesStorage = monitoringRulesStorage;
+            _portfolioMetricsFactory = portfolioMetricsFactory;
             _timer = new MyTaskTimer(nameof(CheckPortfolioJob),
                     TimeSpan.FromMilliseconds(5000),
                     logger,
@@ -73,11 +80,26 @@ namespace Service.Liquidity.Monitoring.Jobs
                     return;
                 }
 
+                var rules = (await _monitoringRulesStorage.GetAsync())?.ToList();
+
+                foreach (var rule in rules ?? new List<MonitoringRule>())
+                {
+                    foreach (var check in rule.Checks ?? new List<PortfolioCheck>())
+                    {
+                        check.RefreshState(portfolio, _portfolioMetricsFactory.Get(check.MetricType));
+                    }
+                    
+                    rule.RefreshState();
+                }
+
+                await _monitoringRulesStorage.UpdateStatesAsync(rules);
+
                 await _publisher.PublishAsync(new PortfolioMonitoringMessage
                 {
                     Portfolio = portfolio,
                     Checks = checks,
-                    RuleSets = ruleSets
+                    RuleSets = ruleSets,
+                    Rules = rules
                 });
             }
             catch (Exception ex)

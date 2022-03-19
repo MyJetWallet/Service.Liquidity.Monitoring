@@ -46,6 +46,7 @@ namespace Service.Liquidity.Monitoring
                 endpoints.MapGrpcSchema<AssetPortfolioSettingsManager, IAssetPortfolioSettingsManager>();
                 endpoints.MapGrpcSchema<PortfolioChecksManager, IPortfolioChecksManager>();
                 endpoints.MapGrpcSchema<MonitoringRuleSetsManager, IMonitoringRuleSetsManager>();
+                endpoints.MapGrpcSchema<MonitoringRulesManager, IMonitoringRulesManager>();
 
                 endpoints.MapGrpcSchemaRegistry();
 

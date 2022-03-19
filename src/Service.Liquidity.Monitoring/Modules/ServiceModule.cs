@@ -1,9 +1,9 @@
 ﻿using Autofac;
-using OpenTelemetry.Context.Propagation;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Jobs;
 using Service.Liquidity.Monitoring.NoSql.Checks;
+using Service.Liquidity.Monitoring.NoSql.Rules;
 using Service.Liquidity.Monitoring.NoSql.RuleSets;
 using Service.Liquidity.Monitoring.Services;
 using Service.Liquidity.TradingPortfolio.Client;
@@ -74,6 +74,9 @@ namespace Service.Liquidity.Monitoring.Modules
                 .AutoActivate()
                 .SingleInstance()
                 .AsSelf();
+
+            builder.RegisterType<MonitoringRulesNoSqlStorage>().As<IMonitoringRulesStorage>()
+                .SingleInstance().AutoActivate();
         }
     }
 }
