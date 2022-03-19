@@ -20,6 +20,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 6)] public MonitoringRuleState PrevState { get; set; }
         [DataMember(Order = 7)] public MonitoringRuleState CurrentState { get; set; }
         [DataMember(Order = 9)] public string Description { get; set; }
+        [DataMember(Order = 10)] public HedgeStrategyParams HedgeStrategyParams { get; set; }
         [DataMember(Order = 11)] public IEnumerable<PortfolioCheck> Checks { get; set; }
         [DataMember(Order = 12)] public string Category { get; set; }
         [DataMember(Order = 13)] public Dictionary<string, CustomParam> ParamsByName { get; set; }
