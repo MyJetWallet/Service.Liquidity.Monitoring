@@ -66,20 +66,13 @@ namespace Service.Liquidity.Monitoring.Jobs
                     return;
                 }
 
-                var checks = await _portfolioChecksExecutor.ExecuteAsync(portfolio);
-
-                if (checks == null || !checks.Any())
+                var message = new PortfolioMonitoringMessage
                 {
-                    return;
-                }
-
-                var ruleSets = await _monitoringRuleSetsExecutor.ExecuteAsync(portfolio, checks);
-
-                if (ruleSets == null || !ruleSets.Any())
-                {
-                    return;
-                }
-
+                    Portfolio = portfolio,
+                    Checks = new List<PortfolioCheck>(),
+                    RuleSets = new List<MonitoringRuleSet>(),
+                    Rules = new List<MonitoringRule>()
+                };
                 var rules = (await _monitoringRulesStorage.GetAsync())?.ToList();
 
                 foreach (var rule in rules ?? new List<MonitoringRule>())
@@ -93,14 +86,18 @@ namespace Service.Liquidity.Monitoring.Jobs
                 }
 
                 await _monitoringRulesStorage.UpdateStatesAsync(rules);
+                message.Rules = rules;
+                
+                var checks = await _portfolioChecksExecutor.ExecuteAsync(portfolio);
 
-                await _publisher.PublishAsync(new PortfolioMonitoringMessage
+                if (checks?.Any() ?? false)
                 {
-                    Portfolio = portfolio,
-                    Checks = checks,
-                    RuleSets = ruleSets,
-                    Rules = rules
-                });
+                    message.Checks = checks;
+                    var ruleSets = await _monitoringRuleSetsExecutor.ExecuteAsync(portfolio, checks);
+                    message.RuleSets = ruleSets;
+                }
+
+                await _publisher.PublishAsync(message);
             }
             catch (Exception ex)
             {
