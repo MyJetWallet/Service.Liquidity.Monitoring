@@ -36,6 +36,11 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
             PrevState = CurrentState.Adapt<MonitoringRuleState>();
             var ruleChecks = Filter(checks ?? new List<PortfolioCheck>());
 
+            if (ruleChecks == null || !ruleChecks.Any())
+            {
+                ruleChecks = Checks?.ToList() ?? new List<PortfolioCheck>();
+            }
+
             var isActive = LogicalOperatorType switch
             {
                 LogicalOperatorType.All => ruleChecks.All(ch => ch.CurrentState.IsActive),
