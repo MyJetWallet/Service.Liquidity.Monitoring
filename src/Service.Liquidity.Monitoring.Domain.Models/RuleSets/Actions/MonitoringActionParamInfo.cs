@@ -1,9 +1,12 @@
-﻿namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets.Actions
+﻿using System.Runtime.Serialization;
+
+namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets.Actions
 {
+    [DataContract]
     public class MonitoringActionParamInfo
     {
-        public string Name { get; set; }
-        public MonitoringActionParamType Type { get; set; }
+        [DataMember(Order = 1)] public string Name { get; set; }
+        [DataMember(Order = 2)] public MonitoringActionParamType Type { get; set; }
 
         public MonitoringActionParamInfo()
         {
