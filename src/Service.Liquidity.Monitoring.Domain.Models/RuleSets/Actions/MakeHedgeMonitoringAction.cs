@@ -21,15 +21,5 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets.Actions
 
         [DataMember(Order = 4)] public int HedgeStrategyType { get; set; }
         [DataMember(Order = 5)] public decimal HedgePercent { get; set; }
-
-        public MonitoringAction ToBase()
-        {
-            return new MonitoringAction
-            {
-                ParamInfos = ParamInfos,
-                TypeName = TypeName,
-                ParamValuesByName = ParamValuesByName
-            };
-        }
     }
 }
