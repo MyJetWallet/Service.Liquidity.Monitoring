@@ -5,6 +5,10 @@
         public string Name { get; set; }
         public MonitoringActionParamType Type { get; set; }
 
+        public MonitoringActionParamInfo()
+        {
+        }
+
         public MonitoringActionParamInfo(string name, MonitoringActionParamType type)
         {
             Name = name;
