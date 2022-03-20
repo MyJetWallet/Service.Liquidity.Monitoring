@@ -1,5 +1,6 @@
 using MyNoSqlServer.Abstractions;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
+using Service.Liquidity.Monitoring.Domain.Models.Checks;
 using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
 
 namespace Service.Liquidity.Monitoring.NoSql.Rules
@@ -66,7 +67,7 @@ namespace Service.Liquidity.Monitoring.NoSql.Rules
                     dbModel.Value.CurrentState = updatedModel?.CurrentState;
                     dbModel.Value.PrevState = updatedModel?.PrevState;
 
-                    foreach (var dbCheck in dbModel.Value.Checks)
+                    foreach (var dbCheck in dbModel.Value.Checks ?? new List<PortfolioCheck>())
                     {
                         dbCheck.CurrentState = updatedModel?.Checks
                             .FirstOrDefault(ch => ch.Id == dbCheck.Id)?.CurrentState;
