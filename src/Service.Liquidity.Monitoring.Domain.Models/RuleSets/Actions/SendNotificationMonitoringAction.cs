@@ -9,7 +9,8 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets.Actions
         [DataMember(Order = 1)]
         public override string TypeName { get; set; } = nameof(SendNotificationMonitoringAction);
 
-        [DataMember(Order = 2)] public override Dictionary<string, string> ParamValuesByName { get; set; }
+        [DataMember(Order = 2)]
+        public override Dictionary<string, string> ParamValuesByName { get; set; } = new Dictionary<string, string>();
 
         [DataMember(Order = 3)]
         public override ICollection<MonitoringActionParamInfo> ParamInfos { get; set; } =
