@@ -30,7 +30,7 @@ namespace Service.Liquidity.Monitoring.Modules
                 .SingleInstance();
 
             builder
-                .RegisterType<CheckPortfolioJob>()
+                .RegisterType<PortfolioMonitoringJob>()
                 .As<IStartable>()
                 .SingleInstance()
                 .AutoActivate();

@@ -14,9 +14,9 @@ using Service.Liquidity.TradingPortfolio.Grpc;
 
 namespace Service.Liquidity.Monitoring.Jobs
 {
-    public class CheckPortfolioJob : IStartable
+    public class PortfolioMonitoringJob : IStartable
     {
-        private readonly ILogger<CheckPortfolioJob> _logger;
+        private readonly ILogger<PortfolioMonitoringJob> _logger;
         private readonly IPortfolioChecksExecutor _portfolioChecksExecutor;
         private readonly IMonitoringRuleSetsExecutor _monitoringRuleSetsExecutor;
         private readonly IServiceBusPublisher<PortfolioMonitoringMessage> _publisher;
@@ -25,8 +25,8 @@ namespace Service.Liquidity.Monitoring.Jobs
         private readonly IPortfolioMetricsFactory _portfolioMetricsFactory;
         private readonly MyTaskTimer _timer;
 
-        public CheckPortfolioJob(
-            ILogger<CheckPortfolioJob> logger,
+        public PortfolioMonitoringJob(
+            ILogger<PortfolioMonitoringJob> logger,
             IPortfolioChecksExecutor portfolioChecksExecutor,
             IMonitoringRuleSetsExecutor monitoringRuleSetsExecutor,
             IServiceBusPublisher<PortfolioMonitoringMessage> publisher,
@@ -42,7 +42,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             _portfolioService = portfolioService;
             _monitoringRulesStorage = monitoringRulesStorage;
             _portfolioMetricsFactory = portfolioMetricsFactory;
-            _timer = new MyTaskTimer(nameof(CheckPortfolioJob),
+            _timer = new MyTaskTimer(nameof(PortfolioMonitoringJob),
                     TimeSpan.FromMilliseconds(5000),
                     logger,
                     DoAsync)
@@ -62,7 +62,7 @@ namespace Service.Liquidity.Monitoring.Jobs
 
                 if (portfolio == null)
                 {
-                    _logger.LogWarning($"Can't do {nameof(CheckPortfolioJob)}. Portfolio Not found");
+                    _logger.LogWarning($"Can't do {nameof(PortfolioMonitoringJob)}. Portfolio Not found");
                     return;
                 }
 
@@ -97,11 +97,18 @@ namespace Service.Liquidity.Monitoring.Jobs
                     message.RuleSets = ruleSets;
                 }
 
-                await _publisher.PublishAsync(message);
+                try
+                {
+                    await _publisher.PublishAsync(message);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to Publish PortfolioMonitoringMessage");
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{job} failed", nameof(CheckPortfolioJob));
+                _logger.LogError(ex, "{job} failed", nameof(PortfolioMonitoringJob));
             }
         }
     }
