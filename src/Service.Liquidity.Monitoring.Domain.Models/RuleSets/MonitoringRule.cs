@@ -26,7 +26,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 12)] public string Category { get; set; }
         [DataMember(Order = 13)] public Dictionary<string, CustomParam> ParamsByName { get; set; }
         [DataMember(Order = 14)] public string MonitoringRuleSetId { get; set; }
-        [DataMember(Order = 15)] public ICollection<IMonitoringAction> Actions { get; set; }
+        [DataMember(Order = 15)] public ICollection<MonitoringAction> Actions { get; set; }
 
         public void RefreshState()
         {
