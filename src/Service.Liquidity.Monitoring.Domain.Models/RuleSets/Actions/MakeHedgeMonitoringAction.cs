@@ -15,8 +15,21 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets.Actions
         public ICollection<MonitoringActionParamInfo> ParamInfos { get; set; } =
             new List<MonitoringActionParamInfo>
             {
-                new MonitoringActionParamInfo("HedgeStrategyType", MonitoringActionParamType.Int),
-                new MonitoringActionParamInfo("HedgePercent", MonitoringActionParamType.Decimal),
+                new MonitoringActionParamInfo(nameof(HedgeStrategyType), MonitoringActionParamType.Int),
+                new MonitoringActionParamInfo(nameof(HedgePercent), MonitoringActionParamType.Decimal),
             };
+
+        [DataMember(Order = 4)] public int HedgeStrategyType { get; set; }
+        [DataMember(Order = 5)] public decimal HedgePercent { get; set; }
+
+        public MonitoringAction ToBase()
+        {
+            return new MonitoringAction
+            {
+                ParamInfos = ParamInfos,
+                TypeName = TypeName,
+                ParamValuesByName = ParamValuesByName
+            };
+        }
     }
 }
