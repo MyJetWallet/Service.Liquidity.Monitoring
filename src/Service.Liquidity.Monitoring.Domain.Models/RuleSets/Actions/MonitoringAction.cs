@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets.Actions
@@ -17,6 +18,22 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets.Actions
             TypeName = monitoringAction.TypeName;
             ParamInfos = monitoringAction.ParamInfos;
             ParamValuesByName = monitoringAction.ParamValuesByName;
+        }
+
+        public T MapTo<T>() where T: IMonitoringAction
+        {
+            var instance = (T)Activator.CreateInstance(typeof(T));
+
+            if (instance == null)
+            {
+                throw new Exception($"Failed to map MonitoringAction to {nameof(T)}");
+            }
+            
+            instance.ParamInfos = ParamInfos;
+            instance.TypeName = TypeName;
+            instance.ParamValuesByName = ParamValuesByName;
+
+            return instance;
         }
     }
 }
