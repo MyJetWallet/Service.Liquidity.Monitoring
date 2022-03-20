@@ -15,7 +15,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
         [DataMember(Order = 8)] public string Id { get; set; }
         [DataMember(Order = 1)] public string Name { get; set; }
         [DataMember(Order = 2)] public IEnumerable<string> CheckIds { get; set; }
-        [DataMember(Order = 3)] public LogicalOperatorType LogicalOperatorType { get; set; }
+        [DataMember(Order = 3)] public RuleActivationType RuleActivationType { get; set; }
         [DataMember(Order = 4)] public string NotificationChannelId { get; set; }
         [DataMember(Order = 5)] public HedgeStrategyType HedgeStrategyType { get; set; }
         [DataMember(Order = 6)] public MonitoringRuleState PrevState { get; set; }
@@ -43,11 +43,11 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
                 ruleChecks = Checks?.ToList() ?? new List<PortfolioCheck>();
             }
 
-            var isActive = LogicalOperatorType switch
+            var isActive = RuleActivationType switch
             {
-                LogicalOperatorType.All => ruleChecks.All(ch => ch.CurrentState.IsActive),
-                LogicalOperatorType.Any => ruleChecks.Any(ch => ch.CurrentState.IsActive),
-                _ => throw new NotSupportedException($"{nameof(LogicalOperatorType)}")
+                RuleActivationType.WhenAllChecksActive => ruleChecks.All(ch => ch.CurrentState.IsActive),
+                RuleActivationType.WhenAnyCheckActive => ruleChecks.Any(ch => ch.CurrentState.IsActive),
+                _ => throw new NotSupportedException($"{nameof(RuleActivationType)}")
             };
             var activeCheckIds = ruleChecks
                 .Where(ch => ch.CurrentState.IsActive)
