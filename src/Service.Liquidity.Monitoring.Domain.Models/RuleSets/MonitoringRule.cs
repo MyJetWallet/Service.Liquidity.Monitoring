@@ -43,7 +43,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
                 ruleChecks = Checks?.ToList() ?? new List<PortfolioCheck>();
             }
 
-            var isActive = RuleActivationType switch
+            var isActive = ruleChecks.Any() && RuleActivationType switch
             {
                 RuleActivationType.WhenAllChecksActive => ruleChecks.All(ch => ch.CurrentState.IsActive),
                 RuleActivationType.WhenAnyCheckActive => ruleChecks.Any(ch => ch.CurrentState.IsActive),
