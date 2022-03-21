@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets.Actions
+namespace Service.Liquidity.Monitoring.Domain.Models.Actions
 {
     public interface IMonitoringAction
     {

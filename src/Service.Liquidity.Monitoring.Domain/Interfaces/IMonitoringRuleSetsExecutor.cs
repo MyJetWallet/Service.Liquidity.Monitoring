@@ -8,6 +8,5 @@ namespace Service.Liquidity.Monitoring.Domain.Interfaces;
 
 public interface IMonitoringRuleSetsExecutor
 {
-    public Task<ICollection<MonitoringRuleSet>> ExecuteAsync(Portfolio portfolio,
-        IEnumerable<PortfolioCheck> portfolioChecks);
+    public Task<ICollection<MonitoringRuleSet>> ExecuteAsync(Portfolio portfolio);
 }

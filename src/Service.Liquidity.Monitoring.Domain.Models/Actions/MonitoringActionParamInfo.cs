@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets.Actions
+namespace Service.Liquidity.Monitoring.Domain.Models.Actions
 {
     [DataContract]
     public class MonitoringActionParamInfo

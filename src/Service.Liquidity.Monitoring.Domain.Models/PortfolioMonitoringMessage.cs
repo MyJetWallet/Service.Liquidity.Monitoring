@@ -12,8 +12,6 @@ namespace Service.Liquidity.Monitoring.Domain.Models
         public const string TopicName = "jetwallet-liquidity-portfolio-monitoring-message";
 
         [DataMember(Order = 1)] public Portfolio Portfolio { get; set; }
-        [DataMember(Order = 2)] public ICollection<PortfolioCheck> Checks { get; set; }
-        [DataMember(Order = 3)] public ICollection<MonitoringRuleSet> RuleSets { get; set; }
         [DataMember(Order = 4)] public ICollection<MonitoringRule> Rules { get; set; }
 
     }

@@ -17,8 +17,6 @@ namespace Service.Liquidity.Monitoring.Jobs
     public class PortfolioMonitoringJob : IStartable
     {
         private readonly ILogger<PortfolioMonitoringJob> _logger;
-        private readonly IPortfolioChecksExecutor _portfolioChecksExecutor;
-        private readonly IMonitoringRuleSetsExecutor _monitoringRuleSetsExecutor;
         private readonly IServiceBusPublisher<PortfolioMonitoringMessage> _publisher;
         private readonly IManualInputService _portfolioService;
         private readonly IMonitoringRulesStorage _monitoringRulesStorage;
@@ -27,8 +25,6 @@ namespace Service.Liquidity.Monitoring.Jobs
 
         public PortfolioMonitoringJob(
             ILogger<PortfolioMonitoringJob> logger,
-            IPortfolioChecksExecutor portfolioChecksExecutor,
-            IMonitoringRuleSetsExecutor monitoringRuleSetsExecutor,
             IServiceBusPublisher<PortfolioMonitoringMessage> publisher,
             IManualInputService portfolioService,
             IMonitoringRulesStorage monitoringRulesStorage,
@@ -36,8 +32,6 @@ namespace Service.Liquidity.Monitoring.Jobs
         )
         {
             _logger = logger;
-            _portfolioChecksExecutor = portfolioChecksExecutor;
-            _monitoringRuleSetsExecutor = monitoringRuleSetsExecutor;
             _publisher = publisher;
             _portfolioService = portfolioService;
             _monitoringRulesStorage = monitoringRulesStorage;
@@ -66,13 +60,6 @@ namespace Service.Liquidity.Monitoring.Jobs
                     return;
                 }
 
-                var message = new PortfolioMonitoringMessage
-                {
-                    Portfolio = portfolio,
-                    Checks = new List<PortfolioCheck>(),
-                    RuleSets = new List<MonitoringRuleSet>(),
-                    Rules = new List<MonitoringRule>()
-                };
                 var rules = (await _monitoringRulesStorage.GetAsync())?.ToList();
 
                 foreach (var rule in rules ?? new List<MonitoringRule>())
@@ -86,20 +73,19 @@ namespace Service.Liquidity.Monitoring.Jobs
                 }
 
                 await _monitoringRulesStorage.UpdateStatesAsync(rules);
-                message.Rules = rules;
-                
-                var checks = await _portfolioChecksExecutor.ExecuteAsync(portfolio);
-
-                if (checks?.Any() ?? false)
-                {
-                    message.Checks = checks;
-                    var ruleSets = await _monitoringRuleSetsExecutor.ExecuteAsync(portfolio, checks);
-                    message.RuleSets = ruleSets;
-                }
 
                 try
                 {
-                    await _publisher.PublishAsync(message);
+                    if (rules?.Any() ?? false)
+                    {
+                        var message = new PortfolioMonitoringMessage
+                        {
+                            Portfolio = portfolio,
+                            Rules = new List<MonitoringRule>()
+                        };
+                    
+                        await _publisher.PublishAsync(message);
+                    }
                 }
                 catch (Exception ex)
                 {

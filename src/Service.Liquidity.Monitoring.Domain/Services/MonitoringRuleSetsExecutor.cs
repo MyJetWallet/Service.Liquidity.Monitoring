@@ -27,16 +27,8 @@ namespace Service.Liquidity.Monitoring.Domain.Services
             _monitoringRuleSetsCache = monitoringRuleSetsCache;
         }
 
-        public async Task<ICollection<MonitoringRuleSet>> ExecuteAsync(Portfolio portfolio,
-            IEnumerable<PortfolioCheck> checks)
+        public async Task<ICollection<MonitoringRuleSet>> ExecuteAsync(Portfolio portfolio)
         {
-            var checksArr = checks?.ToArray() ?? Array.Empty<PortfolioCheck>();
-
-            if (!checksArr.Any())
-            {
-                return Array.Empty<MonitoringRuleSet>();
-            }
-
             var ruleSets = _monitoringRuleSetsCache.Get()?.ToList() ?? new List<MonitoringRuleSet>();
 
             if (!ruleSets.Any())
@@ -46,17 +38,17 @@ namespace Service.Liquidity.Monitoring.Domain.Services
 
             foreach (var ruleSet in ruleSets)
             {
-                await RefreshStateAsync(ruleSet, checksArr);
+                await RefreshStateAsync(ruleSet);
             }
 
             return ruleSets;
         }
 
-        private async Task RefreshStateAsync(MonitoringRuleSet ruleSet, PortfolioCheck[] checks)
+        private async Task RefreshStateAsync(MonitoringRuleSet ruleSet)
         {
             foreach (var rule in ruleSet.Rules ?? Array.Empty<MonitoringRule>())
             {
-                rule.RefreshState(checks);
+                rule.RefreshState();
             }
 
             await _ruleSetsStorage.UpdateRuleStatesAsync(ruleSet);

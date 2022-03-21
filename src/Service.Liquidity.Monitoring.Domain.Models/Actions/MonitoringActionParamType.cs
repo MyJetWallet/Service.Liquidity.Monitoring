@@ -1,4 +1,4 @@
-﻿namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets.Actions
+﻿namespace Service.Liquidity.Monitoring.Domain.Models.Actions
 {
     public enum MonitoringActionParamType
     {
