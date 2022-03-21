@@ -4,6 +4,8 @@
     {
         Int,
         Decimal,
-        String
+        String,
+        Bool,
+        DateTime,
     }
 }
