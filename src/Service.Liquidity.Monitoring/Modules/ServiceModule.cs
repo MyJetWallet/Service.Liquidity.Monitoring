@@ -2,7 +2,6 @@
 using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Jobs;
-using Service.Liquidity.Monitoring.NoSql.Checks;
 using Service.Liquidity.Monitoring.NoSql.Rules;
 using Service.Liquidity.Monitoring.NoSql.RuleSets;
 using Service.Liquidity.Monitoring.Services;
@@ -40,11 +39,6 @@ namespace Service.Liquidity.Monitoring.Modules
                 .AutoActivate()
                 .AsSelf();
 
-            builder.RegisterType<PortfolioChecksNoSqlStorage>()
-                .As<IPortfolioChecksStorage>()
-                .SingleInstance()
-                .AutoActivate()
-                .AsSelf();
             builder.RegisterType<PortfolioMetricsFactory>()
                 .As<IPortfolioMetricsFactory>()
                 .SingleInstance()
@@ -65,12 +59,6 @@ namespace Service.Liquidity.Monitoring.Modules
             builder
                 .RegisterType<MonitoringRuleSetsExecutor>()
                 .As<IMonitoringRuleSetsExecutor>()
-                .AutoActivate()
-                .SingleInstance()
-                .AsSelf();
-            builder
-                .RegisterType<PortfolioChecksExecutor>()
-                .As<IPortfolioChecksExecutor>()
                 .AutoActivate()
                 .SingleInstance()
                 .AsSelf();

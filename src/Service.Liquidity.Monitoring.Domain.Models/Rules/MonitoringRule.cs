@@ -6,7 +6,7 @@ using Mapster;
 using Service.Liquidity.Monitoring.Domain.Models.Actions;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
 
-namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
+namespace Service.Liquidity.Monitoring.Domain.Models.Rules
 {
     [DataContract]
     public class MonitoringRule

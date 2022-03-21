@@ -9,7 +9,8 @@ using MyJetWallet.Sdk.ServiceBus;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Models;
 using Service.Liquidity.Monitoring.Domain.Models.Checks;
-using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
+using Service.Liquidity.Monitoring.Domain.Models.Rules;
+using Service.Liquidity.TradingPortfolio.Domain.Models;
 using Service.Liquidity.TradingPortfolio.Grpc;
 
 namespace Service.Liquidity.Monitoring.Jobs
@@ -52,7 +53,7 @@ namespace Service.Liquidity.Monitoring.Jobs
         {
             try
             {
-                var portfolio = (await _portfolioService.GetPortfolioAsync()).Portfolio;
+                var portfolio = (await _portfolioService.GetPortfolioAsync())?.Portfolio;
 
                 if (portfolio == null)
                 {
@@ -61,7 +62,20 @@ namespace Service.Liquidity.Monitoring.Jobs
                 }
 
                 var rules = (await _monitoringRulesStorage.GetAsync())?.ToList();
+                
+                await RefreshAsync(portfolio, rules);
+                await PublishAsync(portfolio, rules);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{job} failed", nameof(PortfolioMonitoringJob));
+            }
+        }
 
+        private async Task RefreshAsync(Portfolio portfolio, ICollection<MonitoringRule> rules)
+        {
+            try
+            {
                 foreach (var rule in rules ?? new List<MonitoringRule>())
                 {
                     foreach (var check in rule.Checks ?? new List<PortfolioCheck>())
@@ -73,28 +87,31 @@ namespace Service.Liquidity.Monitoring.Jobs
                 }
 
                 await _monitoringRulesStorage.UpdateStatesAsync(rules);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to RefreshRules");
+            }
+        }
 
-                try
+        private async Task PublishAsync(Portfolio portfolio, ICollection<MonitoringRule> rules)
+        {
+            try
+            {
+                if (rules?.Any() ?? false)
                 {
-                    if (rules?.Any() ?? false)
+                    var message = new PortfolioMonitoringMessage
                     {
-                        var message = new PortfolioMonitoringMessage
-                        {
-                            Portfolio = portfolio,
-                            Rules = new List<MonitoringRule>()
-                        };
+                        Portfolio = portfolio,
+                        Rules = new List<MonitoringRule>()
+                    };
                     
-                        await _publisher.PublishAsync(message);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to Publish PortfolioMonitoringMessage");
+                    await _publisher.PublishAsync(message);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{job} failed", nameof(PortfolioMonitoringJob));
+                _logger.LogError(ex, $"Failed to Publish {nameof(PortfolioMonitoringMessage)}");
             }
         }
     }

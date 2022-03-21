@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
+using Service.Liquidity.Monitoring.Domain.Models.Rules;
 
 namespace Service.Liquidity.Monitoring.Domain.Interfaces;
 

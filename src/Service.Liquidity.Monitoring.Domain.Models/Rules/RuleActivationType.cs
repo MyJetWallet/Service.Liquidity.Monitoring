@@ -1,4 +1,4 @@
-namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
+namespace Service.Liquidity.Monitoring.Domain.Models.Rules
 {
     public enum RuleActivationType
     {

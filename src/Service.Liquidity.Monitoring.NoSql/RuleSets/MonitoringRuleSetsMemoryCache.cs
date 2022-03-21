@@ -1,6 +1,6 @@
 ﻿using MyNoSqlServer.Abstractions;
 using Service.Liquidity.Monitoring.Domain.Interfaces;
-using Service.Liquidity.Monitoring.Domain.Models.RuleSets;
+using Service.Liquidity.Monitoring.Domain.Models.Rules;
 
 namespace Service.Liquidity.Monitoring.NoSql.RuleSets;
 

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-namespace Service.Liquidity.Monitoring.Domain.Models.RuleSets
+namespace Service.Liquidity.Monitoring.Domain.Models.Rules
 {
     [DataContract]
     public class MonitoringRuleState
