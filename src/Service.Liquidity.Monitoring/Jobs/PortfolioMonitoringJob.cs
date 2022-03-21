@@ -103,7 +103,7 @@ namespace Service.Liquidity.Monitoring.Jobs
                     var message = new PortfolioMonitoringMessage
                     {
                         Portfolio = portfolio,
-                        Rules = new List<MonitoringRule>()
+                        Rules = rules
                     };
                     
                     await _publisher.PublishAsync(message);
