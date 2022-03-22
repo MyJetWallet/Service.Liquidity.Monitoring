@@ -35,5 +35,12 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Actions
 
             return instance;
         }
+        
+        public void CopyTo(IMonitoringAction action)
+        {
+            TypeName = action.TypeName;
+            ParamValuesByName = action.ParamValuesByName;
+            ParamInfos = action.ParamInfos;
+        }
     }
 }
