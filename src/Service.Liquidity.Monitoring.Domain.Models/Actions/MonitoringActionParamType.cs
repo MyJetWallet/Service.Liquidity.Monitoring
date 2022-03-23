@@ -7,5 +7,6 @@
         String,
         Bool,
         DateTime,
+        TimeSpan
     }
 }
