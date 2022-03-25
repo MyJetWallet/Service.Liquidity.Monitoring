@@ -11,20 +11,17 @@ namespace Service.Liquidity.Monitoring
     public class ApplicationLifetimeManager : ApplicationLifetimeManagerBase
     {
         private readonly ILogger<ApplicationLifetimeManager> _logger;
-        private readonly RefreshPortfolioStatusesJob _refreshPortfolioStatusesJob;
         private readonly ServiceBusLifeTime _myServiceBusTcpClient;
         private readonly MyNoSqlClientLifeTime _myNoSqlClientLifeTime;
 
         public ApplicationLifetimeManager(IHostApplicationLifetime appLifetime,
             ILogger<ApplicationLifetimeManager> logger,
             MyNoSqlTcpClient[] myNoSqlTcpClientManagers, 
-            RefreshPortfolioStatusesJob refreshPortfolioStatusesJob, 
             ServiceBusLifeTime myServiceBusTcpClient, 
             MyNoSqlClientLifeTime myNoSqlClientLifeTime)
             : base(appLifetime)
         {
             _logger = logger;
-            _refreshPortfolioStatusesJob = refreshPortfolioStatusesJob;
             _myServiceBusTcpClient = myServiceBusTcpClient;
             _myNoSqlClientLifeTime = myNoSqlClientLifeTime;
         }
@@ -33,7 +30,6 @@ namespace Service.Liquidity.Monitoring
         {
             _logger.LogInformation("OnStarted has been called.");
             _myNoSqlClientLifeTime.Start();
-            _refreshPortfolioStatusesJob.Start();
             _myServiceBusTcpClient.Start();
         }
 
@@ -41,7 +37,6 @@ namespace Service.Liquidity.Monitoring
         {
             _logger.LogInformation("OnStopping has been called.");
             _myServiceBusTcpClient.Stop();
-            _refreshPortfolioStatusesJob.Stop();
             _myNoSqlClientLifeTime.Stop();
         }
 

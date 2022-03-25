@@ -16,34 +16,17 @@ namespace Service.Liquidity.Monitoring.Modules
             builder.RegisterLiquidityTradingPortfolioClient(Program.Settings.LiquidityTradingPortfolioServiceUrl);
             
             builder
-                .RegisterType<AssetPortfolioSettingsStorage>()
-                .As<IAssetPortfolioSettingsStorage>()
-                .As<IStartable>()
-                .AutoActivate()
-                .SingleInstance();
-            builder
-                .RegisterType<AssetPortfolioStatusStorage>()
-                .As<IAssetPortfolioStatusStorage>()
-                .As<IStartable>()
-                .AutoActivate()
-                .SingleInstance();
-
-            builder
                 .RegisterType<PortfolioMonitoringJob>()
                 .As<IStartable>()
                 .SingleInstance()
                 .AutoActivate();
-
-            builder.RegisterType<RefreshPortfolioStatusesJob>()
-                .SingleInstance()
-                .AutoActivate()
-                .AsSelf();
 
             builder.RegisterType<PortfolioMetricsFactory>()
                 .As<IPortfolioMetricsFactory>()
                 .SingleInstance()
                 .AutoActivate()
                 .AsSelf();
+            
             builder.RegisterType<MonitoringRuleSetsNoSqlStorage>()
                 .As<IMonitoringRuleSetsStorage>()
                 .SingleInstance()

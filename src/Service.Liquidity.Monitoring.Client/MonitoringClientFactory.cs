@@ -11,8 +11,6 @@ namespace Service.Liquidity.Monitoring.Client
         {
         }
         
-        public IAssetPortfolioSettingsManager GetAssetPortfolioSettingsService() => CreateGrpcService<IAssetPortfolioSettingsManager>();
-        
         public IPortfolioChecksManager GetPortfolioChecksManager() => CreateGrpcService<IPortfolioChecksManager>();
         public IMonitoringRuleSetsManager GetMonitoringRuleSetsManager() => CreateGrpcService<IMonitoringRuleSetsManager>();
         public IMonitoringRulesManager GetMonitoringRulesManager() => CreateGrpcService<IMonitoringRulesManager>();

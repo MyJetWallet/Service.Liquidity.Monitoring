@@ -43,7 +43,6 @@ namespace Service.Liquidity.Monitoring
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcSchema<AssetPortfolioSettingsManager, IAssetPortfolioSettingsManager>();
                 endpoints.MapGrpcSchema<MonitoringRuleSetsManager, IMonitoringRuleSetsManager>();
                 endpoints.MapGrpcSchema<MonitoringRulesManager, IMonitoringRulesManager>();
 
