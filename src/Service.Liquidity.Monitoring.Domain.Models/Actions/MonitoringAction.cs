@@ -38,6 +38,13 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Actions
         
         public void CopyTo(IMonitoringAction action)
         {
+            action.TypeName = TypeName;
+            action.ParamValuesByName= ParamValuesByName;
+            action.ParamInfos = ParamInfos;
+        }
+        
+        public void CopyFrom(IMonitoringAction action)
+        {
             TypeName = action.TypeName;
             ParamValuesByName = action.ParamValuesByName;
             ParamInfos = action.ParamInfos;
