@@ -38,7 +38,7 @@ namespace Service.Liquidity.Monitoring.Jobs
             _monitoringRulesStorage = monitoringRulesStorage;
             _portfolioMetricsFactory = portfolioMetricsFactory;
             _timer = new MyTaskTimer(nameof(PortfolioMonitoringJob),
-                    TimeSpan.FromMilliseconds(5000),
+                    TimeSpan.FromMilliseconds(3500),
                     logger,
                     DoAsync)
                 .DisableTelemetry();
