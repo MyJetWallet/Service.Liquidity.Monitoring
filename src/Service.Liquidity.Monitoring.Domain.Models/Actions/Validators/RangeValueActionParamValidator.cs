@@ -7,7 +7,10 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Actions.Validators;
 [DataContract]
 public class RangeValueActionParamValidator : IActionParamValidator
 {
-    [DataMember(Order = 1)]
+    [DataMember(Order = 1)] public ValidatorType Type { get; set; } = ValidatorType.Range;
+    [DataMember(Order = 2)] public Dictionary<string, string> ParamValuesByName { get; set; } = new();
+
+    [DataMember(Order = 3)]
     public decimal MaxValue
     {
         get
@@ -19,7 +22,7 @@ public class RangeValueActionParamValidator : IActionParamValidator
         set => ParamValuesByName[nameof(MaxValue)] = value.ToString(CultureInfo.InvariantCulture);
     }
 
-    [DataMember(Order = 2)]
+    [DataMember(Order = 4)]
     public decimal MinValue
     {
         get
@@ -30,10 +33,6 @@ public class RangeValueActionParamValidator : IActionParamValidator
         }
         set => ParamValuesByName[nameof(MinValue)] = value.ToString(CultureInfo.InvariantCulture);
     }
-
-
-    public ValidatorType Type { get; set; } = ValidatorType.Range;
-    public Dictionary<string, string> ParamValuesByName { get; set; } = new();
 
     public RangeValueActionParamValidator(decimal minValue, decimal maxValue)
     {
