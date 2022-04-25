@@ -6,5 +6,5 @@ namespace Service.Liquidity.Monitoring.Grpc.Models.ActionTemplates;
 [DataContract]
 public class GetMonitoringActionTemplateListRequest
 {
-    [DataMember(Order = 1)] public IMonitoringAction Action { get; set; }
+    [DataMember(Order = 1)] public MonitoringAction Action { get; set; }
 }
