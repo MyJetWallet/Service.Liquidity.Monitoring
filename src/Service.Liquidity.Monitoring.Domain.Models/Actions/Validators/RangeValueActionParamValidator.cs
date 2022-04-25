@@ -32,7 +32,7 @@ public class RangeValueActionParamValidator : IActionParamValidator
     }
 
 
-    public ValidatorType Type { get; set; }
+    public ValidatorType Type { get; set; } = ValidatorType.Range;
     public Dictionary<string, string> ParamValuesByName { get; set; } = new();
 
     public RangeValueActionParamValidator(decimal minValue, decimal maxValue)
