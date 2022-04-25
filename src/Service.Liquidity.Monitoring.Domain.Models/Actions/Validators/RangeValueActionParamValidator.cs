@@ -1,17 +1,49 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Collections.Generic;
+using System.Globalization;
+using System.Runtime.Serialization;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.Actions.Validators;
 
 [DataContract]
 public class RangeValueActionParamValidator : IActionParamValidator
 {
-    [DataMember(Order = 1)] public decimal MinValue { get; set; }
-    [DataMember(Order = 2)] public decimal MaxValue { get; set; }
+    [DataMember(Order = 1)]
+    public decimal MaxValue
+    {
+        get
+        {
+            var strValue = ParamValuesByName[nameof(MaxValue)];
+
+            return decimal.Parse(strValue);
+        }
+        set => ParamValuesByName[nameof(MaxValue)] = value.ToString(CultureInfo.InvariantCulture);
+    }
+
+    [DataMember(Order = 2)]
+    public decimal MinValue
+    {
+        get
+        {
+            var strValue = ParamValuesByName[nameof(MinValue)];
+
+            return decimal.Parse(strValue);
+        }
+        set => ParamValuesByName[nameof(MinValue)] = value.ToString(CultureInfo.InvariantCulture);
+    }
+
+
+    public ValidatorType Type { get; set; }
+    public Dictionary<string, string> ParamValuesByName { get; set; } = new();
 
     public RangeValueActionParamValidator(decimal minValue, decimal maxValue)
     {
         MinValue = minValue;
         MaxValue = maxValue;
+    }
+
+    public RangeValueActionParamValidator(Dictionary<string, string> paramValuesByName)
+    {
+        ParamValuesByName = paramValuesByName;
     }
 
     public bool IsValid(string value, out string message)
