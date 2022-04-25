@@ -18,6 +18,7 @@ public class MonitoringActionParamTemplate
         new List<(string Value, string DisplayValue)>();
 
     [DataMember(Order = 7)] public ICollection<IActionParamValidator> Validators { get; set; } = new List<IActionParamValidator>();
+    [DataMember(Order = 8)] public bool Readonly { get; set; }
 
     public bool Validate(out string message)
     {
