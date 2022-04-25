@@ -7,7 +7,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Actions.Templates;
 [DataContract]
 public class MonitoringActionTemplate
 {
-    [DataMember(Order = 1)] public IMonitoringAction Action { get; set; } = new MonitoringAction();
+    [DataMember(Order = 1)] public MonitoringAction Action { get; set; } = new ();
 
     [DataMember(Order = 2)] public ICollection<MonitoringActionParamTemplate> ParamTemplates { get; set; } =
         new List<MonitoringActionParamTemplate>();
