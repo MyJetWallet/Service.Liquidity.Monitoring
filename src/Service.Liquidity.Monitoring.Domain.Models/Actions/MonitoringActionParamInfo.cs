@@ -7,6 +7,7 @@ namespace Service.Liquidity.Monitoring.Domain.Models.Actions
     {
         [DataMember(Order = 1)] public string Name { get; set; }
         [DataMember(Order = 2)] public MonitoringActionParamType Type { get; set; }
+        [DataMember(Order = 3)] public bool Readonly { get; set; }
 
         public MonitoringActionParamInfo()
         {
