@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 
 namespace Service.Liquidity.Monitoring.Domain.Models.Actions.Validators;
 
+[DataContract]
 public class ActionParamValidator : IActionParamValidator
 {
     [DataMember(Order = 1)] public ValidatorType Type { get; set; }
