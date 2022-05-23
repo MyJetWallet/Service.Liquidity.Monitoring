@@ -12,8 +12,6 @@ public class ServiceBusModule : Module
             Program.ReloadedSettings(e => e.SpotServiceBusHostPort),
             Program.LogFactory);
 
-        builder.RegisterMyServiceBusPublisher<AssetPortfolioStatusMessage>(serviceBusClient,
-            AssetPortfolioStatusMessage.TopicName, true);
         builder.RegisterMyServiceBusPublisher<PortfolioMonitoringMessage>(serviceBusClient,
             PortfolioMonitoringMessage.TopicName, false);
     }
