@@ -15,12 +15,12 @@ public class NoSqlModule : Module
         
         builder.RegisterMyNoSqlReader<PortfolioNoSql>(noSqlClient, PortfolioNoSql.TableName);
 
-        builder.RegisterMyNoSqlWriter<MonitoringRuleSetNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
+        builder.RegisterMyNoSqlWriter<MonitoringRuleSetNoSql>(() => Program.Settings.MyNoSqlWriterUrl,
             MonitoringRuleSetNoSql.TableName);
         
         builder.RegisterMyNoSqlReader<MonitoringRuleSetNoSql>(noSqlClient, MonitoringRuleSetNoSql.TableName);
         
-        builder.RegisterMyNoSqlWriter<MonitoringRuleNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
+        builder.RegisterMyNoSqlWriter<MonitoringRuleNoSql>(() => Program.Settings.MyNoSqlWriterUrl,
             MonitoringRuleNoSql.TableName);
     }
 }

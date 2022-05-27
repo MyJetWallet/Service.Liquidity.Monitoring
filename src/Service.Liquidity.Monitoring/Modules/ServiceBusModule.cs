@@ -9,7 +9,7 @@ public class ServiceBusModule : Module
     protected override void Load(ContainerBuilder builder)
     {
         var serviceBusClient = builder.RegisterMyServiceBusTcpClient(
-            Program.ReloadedSettings(e => e.SpotServiceBusHostPort),
+            () => Program.Settings.SpotServiceBusHostPort,
             Program.LogFactory);
 
         builder.RegisterMyServiceBusPublisher<PortfolioMonitoringMessage>(serviceBusClient,
