@@ -2,6 +2,7 @@
 using Service.Liquidity.Monitoring.Domain.Interfaces;
 using Service.Liquidity.Monitoring.Domain.Services;
 using Service.Liquidity.Monitoring.Jobs;
+using Service.Liquidity.Monitoring.NoSql.Backups;
 using Service.Liquidity.Monitoring.NoSql.Rules;
 using Service.Liquidity.Monitoring.NoSql.RuleSets;
 using Service.Liquidity.Monitoring.Services;
@@ -47,6 +48,8 @@ namespace Service.Liquidity.Monitoring.Modules
                 .AsSelf();
 
             builder.RegisterType<MonitoringRulesNoSqlStorage>().As<IMonitoringRulesStorage>()
+                .SingleInstance().AutoActivate();
+            builder.RegisterType<MonitoringRulesBackupsNoSqlStorage>().As<IMonitoringRulesBackupsStorage>()
                 .SingleInstance().AutoActivate();
         }
     }

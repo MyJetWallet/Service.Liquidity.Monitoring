@@ -45,6 +45,7 @@ namespace Service.Liquidity.Monitoring
             {
                 endpoints.MapGrpcSchema<MonitoringRuleSetsManager, IMonitoringRuleSetsManager>();
                 endpoints.MapGrpcSchema<MonitoringRulesManager, IMonitoringRulesManager>();
+                endpoints.MapGrpcSchema<MonitoringRulesBackupsManager, IMonitoringRulesBackupsManager>();
 
                 endpoints.MapGrpcSchemaRegistry();
 
