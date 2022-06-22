@@ -47,7 +47,7 @@ namespace Service.Liquidity.Monitoring.NoSql.Rules
         public async Task AddOrUpdateAsync(IEnumerable<MonitoringRule> models)
         {
             var nosqlModels = models.Select(MonitoringRuleNoSql.Create);
-            await _myNoSqlServerDataWriter.BulkInsertOrReplaceAsync(nosqlModels);
+            await _myNoSqlServerDataWriter.BulkInsertOrReplaceAsync(nosqlModels.ToArray());
         }
         
         public async Task UpdateStatesAsync(IEnumerable<MonitoringRule> models)
