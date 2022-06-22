@@ -17,6 +17,7 @@ namespace Service.Liquidity.Monitoring.Client
             builder.RegisterInstance(factory.GetPortfolioChecksManager()).As<IPortfolioChecksManager>().SingleInstance();
             builder.RegisterInstance(factory.GetMonitoringRuleSetsManager()).As<IMonitoringRuleSetsManager>().SingleInstance();
             builder.RegisterInstance(factory.GetMonitoringRulesManager()).As<IMonitoringRulesManager>().SingleInstance();
+            builder.RegisterInstance(factory.GetMonitoringRulesBackupsManager()).As<IMonitoringRulesBackupsManager>().SingleInstance();
         }
   
         public static void RegisterPortfolioChecksClient(this ContainerBuilder builder, string grpcServiceUrl)
