@@ -32,16 +32,16 @@ namespace Service.Liquidity.Monitoring.NoSql.Backups
                     check.CurrentState = null;
                 }
             }
-            
+
             var nosqlModel = MonitoringRulesBackupNoSql.Create(model);
             var existingBackup = await _backupsWriter.GetAsync(nosqlModel.PartitionKey, nosqlModel.RowKey);
-            
+
             if (existingBackup == null)
             {
                 var infoNoSql = MonitoringRulesBackupInfoNoSql.Create(model);
                 await _infosWriter.InsertOrReplaceAsync(infoNoSql);
             }
-            
+
             await _backupsWriter.InsertOrReplaceAsync(nosqlModel);
         }
 
@@ -63,6 +63,8 @@ namespace Service.Liquidity.Monitoring.NoSql.Backups
 
         public async Task DeleteAsync(string id)
         {
+            await _infosWriter.DeleteAsync(MonitoringRulesBackupInfoNoSql.GeneratePartitionKey(),
+                MonitoringRulesBackupInfoNoSql.GenerateRowKey(id));
             await _backupsWriter.DeleteAsync(
                 MonitoringRulesBackupNoSql.GeneratePartitionKey(id),
                 MonitoringRulesBackupNoSql.GenerateRowKey(id));
